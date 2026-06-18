@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Мой Блог{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Стили специфичные для страницы поста */
+    .post-container {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+    .back-link:hover { color: var(--accent); }
+    .back-link svg { margin-right: 8px; width: 20px; height: 20px; }
+
+    .post-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin: 0 0 1.5rem 0;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+    }
+
+    .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        background-color: var(--accent);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .author-name {
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .post-content {
+        font-size: 1.125rem;
+        color: #374151;
+        line-height: 1.8;
+    }
+
+    .post-content p { margin-bottom: 1.5em; }
+
+    @media (max-width: 768px) {
+        .post-container {
+            padding: 24px 20px;
+            border-radius: 8px;
+        }
+        .post-title { font-size: 2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <a href="{% url 'blog:post_list' %}" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        К списку статей
+    </a>
+
+    <article class="post-container">
+        <h1 class="post-title">{{ post.title }}</h1>
+        
+        <div class="post-meta">
+            <div class="avatar">{{ post.author.username.0|upper }}</div>
+            <div class="author-info">
+                <span class="author-name">{{ post.author.username }}</span>
+                <time>{{ post.created_at|date:"j E Y г." }}</time>
+            </div>
+        </div>
+
+        <div class="post-content">
+            {{ post.body|linebreaks }}
+        </div>
+    </article>
+{% endblock %}

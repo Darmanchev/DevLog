@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Здесь страницы будут подставлять свой заголовок -->
+    <title>{% block title %}Мой Блог{% endblock %}</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --nav-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Навигационная панель */
+        .navbar {
+            background-color: var(--nav-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--accent); }
+
+        /* Основной контент */
+        .main-content {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            box-sizing: border-box;
+        }
+
+        /* Подвал */
+        .footer {
+            background-color: var(--nav-bg);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+    </style>
+    <!-- Место для дополнительных стилей (если понадобится) -->
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Шапка сайта -->
+    <header class="navbar">
+        <div class="nav-container">
+            <!-- Ссылка на главную страницу -->
+            <a href="{% url 'blog:post_list' %}" class="logo">My<span>Blog</span></a>
+            <nav class="nav-links">
+                <a href="{% url 'blog:post_list' %}">Главная</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Сюда будет вставляться контент других страниц -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <!-- Подвал сайта -->
+    <footer class="footer">
+        &copy; {% now "Y" %} Мой Блог. Все права защищены.
+    </footer>
+
+</body>
+</html>
