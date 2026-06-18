@@ -2,114 +2,33 @@
 
 {% block title %}{{ post.title }} - Мой Блог{% endblock %}
 
-{% block extra_head %}
-<style>
-    /* Стили специфичные для страницы поста */
-    .post-container {
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid #e5e7eb;
-    }
-    
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
-        transition: color 0.2s ease;
-        font-weight: 500;
-    }
-
-    .back-link:hover { color: var(--accent); }
-    .back-link svg { margin-right: 8px; width: 20px; height: 20px; }
-
-    .post-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        line-height: 1.2;
-        margin: 0 0 1.5rem 0;
-        color: var(--text-main);
-        letter-spacing: -0.025em;
-    }
-
-    .post-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 2rem;
-        color: var(--text-muted);
-        font-size: 0.95rem;
-    }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-        background-color: var(--accent);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-
-    .author-info {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .author-name {
-        font-weight: 600;
-        color: var(--text-main);
-    }
-
-    .post-content {
-        font-size: 1.125rem;
-        color: #374151;
-        line-height: 1.8;
-    }
-
-    .post-content p { margin-bottom: 1.5em; }
-
-    @media (max-width: 768px) {
-        .post-container {
-            padding: 24px 20px;
-            border-radius: 8px;
-        }
-        .post-title { font-size: 2rem; }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-    <a href="{% url 'blog:post_list' %}" class="back-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
+    <!-- Ссылка назад -->
+    <a href="{% url 'blog:post_list' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-8 transition-colors">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         К списку статей
     </a>
 
-    <article class="post-container">
-        <h1 class="post-title">{{ post.title }}</h1>
+    <!-- Контейнер поста -->
+    <article class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-200">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
+            {{ post.title }}
+        </h1>
         
-        <div class="post-meta">
-            <div class="avatar">{{ post.author.username.0|upper }}</div>
-            <div class="author-info">
-                <span class="author-name">{{ post.author.username }}</span>
-                <time>{{ post.created_at|date:"j E Y г." }}</time>
+        <div class="flex items-center gap-3 pb-8 mb-8 border-b border-gray-200 text-gray-500">
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                {{ post.author.username.0|upper }}
+            </div>
+            <div class="flex flex-col">
+                <span class="font-semibold text-gray-900">{{ post.author.username }}</span>
+                <time class="text-sm">{{ post.created_at|date:"j E Y г." }}</time>
             </div>
         </div>
 
-        <div class="post-content">
+        <div class="text-lg text-gray-700 leading-relaxed space-y-6">
             {{ post.body|linebreaks }}
         </div>
     </article>
-{% endblock %}
+{% endblock content %}
