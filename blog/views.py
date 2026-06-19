@@ -1,10 +1,18 @@
-from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
 from .models import Post
 
-def post_list(request):
-    posts = Post.objects.filter(status=Post.Status.PUBLISHED)
-    return render(request, 'blog/post_list.html', {'posts': posts})
+class PostListView(ListView):
+    # Какую выборку данных использовать
+    queryset = Post.objects.filter(status=Post.Status.PUBLISHED)
+    # Как переменная будет называться в шаблоне (по умолчанию object_list)
+    context_object_name = 'posts'
+    # Какой шаблон использовать
+    template_name = 'blog/post_list.html'
 
-def post_detail(request, slug):
-    post = get_object_or_404(Post, slug=slug, status=Post.Status.PUBLISHED)
-    return render(request, 'blog/post_detail.html', {'post': post})
+class PostDetailView(DetailView):
+    template_name = 'blog/post_detail.html'
+    context_object_name = 'post'
+
+    # Переопределяем выборку, чтобы по прямому URL нельзя было открыть черновик
+    def get_queryset(self):
+        return Post.objects.filter(status=Post.Status.PUBLISHED)
