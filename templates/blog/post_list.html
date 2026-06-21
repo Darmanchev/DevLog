@@ -3,39 +3,58 @@
 {% block title %}Блог - Последние записи{% endblock %}
 
 {% block content %}
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Последние записи</h1>
+    <section aria-labelledby="latest-posts-title">
+        <header class="mb-8">
+            <h1 id="latest-posts-title" class="text-3xl font-bold text-gray-900">Последние записи</h1>
+        </header>
 
-    <div class="flex flex-col gap-6">
-        {% for post in posts %}
-            <article class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all hover:shadow-md hover:-translate-y-1">
-                <h2 class="text-2xl font-bold mb-2">
-                    <a href="{{ post.get_absolute_url }}" class="text-gray-900 hover:text-blue-600 transition-colors">
-                        {{ post.title }}
-                    </a>
-                </h2>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                        {{ post.author.username.0|upper }}
-                    </span>
-                    <span>{{ post.author.username }} &bull; {{ post.created_at|date:"d M Y" }}</span>
+        <div class="flex flex-col gap-6">
+            {% for post in posts %}
+                <article class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all hover:shadow-md hover:-translate-y-1">
+                    
+                    <!-- Шапка карточки поста (заголовок и метаданные) -->
+                    <header class="mb-4">
+                        <h2 class="text-2xl font-bold mb-2">
+                            <a href="{{ post.get_absolute_url }}" class="text-gray-900 hover:text-blue-600 transition-colors">
+                                {{ post.title }}
+                            </a>
+                        </h2>
+                        
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <!-- Аватарка (декоративный элемент, скрыт от скринридеров) -->
+                            <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold" aria-hidden="true">
+                                {{ post.author.username.0|upper }}
+                            </span>
+                            
+                            <!-- Семантическое указание автора и времени -->
+                            <address class="not-italic inline">
+                                <span class="sr-only">Автор:</span> {{ post.author.username }} 
+                            </address>
+                            <span aria-hidden="true">&bull;</span>
+                            <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d M Y" }}</time>
+                        </div>
+                    </header>
+                    
+                    <!-- Краткий текст поста -->
+                    <div class="text-gray-600 leading-relaxed mb-6">
+                        {{ post.body|truncatewords:30 }}
+                    </div>
+                    
+                    <!-- Подвал карточки (ссылка для чтения) -->
+                    <footer>
+                        <a href="{{ post.get_absolute_url }}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium" aria-label="Читать статью полностью: {{ post.title }}">
+                            Читать далее
+                            <svg aria-hidden="true" class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </footer>
+                </article>
+            {% empty %}
+                <div class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-gray-500">Постов пока нет. Возвращайтесь позже!</p>
                 </div>
-                
-                <p class="text-gray-600 leading-relaxed mb-6">
-                    {{ post.body|truncatewords:30 }}
-                </p>
-                
-                <a href="{{ post.get_absolute_url }}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
-                    Читать далее
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </article>
-        {% empty %}
-            <div class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
-                <p class="text-gray-500">Постов пока нет. Возвращайтесь позже!</p>
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+    </section>
 {% endblock content %}

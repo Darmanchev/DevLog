@@ -14,16 +14,52 @@
     <!-- Шапка сайта -->
     <header class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="{% url 'blog:post_list' %}" class="text-2xl font-extrabold tracking-tight text-gray-900">
+            <!-- Логотип -->
+            <a href="{% url 'blog:post_list' %}" class="text-2xl font-extrabold tracking-tight text-gray-900" aria-label="На главную страницу">
                 My<span class="text-blue-600">Blog</span>
             </a>
-            <nav>
-                <a href="{% url 'blog:post_list' %}" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">Главная</a>
-            </nav>
+            
+            <!-- Правая часть (Навигация + Профиль) -->
+            <div class="flex items-center space-x-6">
+                <!-- Основная навигация -->
+                <nav aria-label="Основная навигация">
+                    <ul class="flex items-center m-0 p-0 list-none">
+                        <li>
+                            <a href="{% url 'blog:post_list' %}" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">Главная</a>
+                        </li>
+                    </ul>
+                </nav>
+
+                    <!-- Блок профиля пользователя -->
+                    <div class="flex items-center space-x-4 border-l border-gray-200 pl-6">
+                        {% if user.is_authenticated %}
+                            <!-- Кнопка "Написать пост" -->
+                            <a href="{% url 'blog:post_create' %}" class="hidden sm:inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-2">
+                                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Написать пост
+                            </a>
+                            
+                            <span class="text-sm text-gray-700">
+                                Привет, <span class="font-bold text-gray-900">{{ user.username }}</span>!
+                        </span>
+                        <!-- Кнопка "Выйти" -->
+                        <form method="post" action="{% url 'logout' %}" class="inline m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
+                                Выйти
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- Кнопки "Войти" и "Регистрация" -->
+                        <a href="{% url 'login' %}" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">Войти</a>
+                        <a href="{% url 'blog:signup' %}" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors shadow-sm">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Основной контент -->
+    <!-- Основной контент страницы -->
     <main class="flex-grow w-full max-w-4xl mx-auto my-8 px-6">
         {% block content %}
         {% endblock content %}
@@ -31,7 +67,7 @@
 
     <!-- Подвал сайта -->
     <footer class="bg-white border-t border-gray-200 text-center py-6 mt-auto">
-        <p class="text-gray-500 text-sm">&copy; {% now "Y" %} Мой Блог. Все права защищены.</p>
+        <p class="text-gray-500 text-sm">&copy; <time datetime="{% now 'Y' %}">{% now "Y" %}</time> Мой Блог. Все права защищены.</p>
     </footer>
 
 </body>
