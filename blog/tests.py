@@ -89,3 +89,59 @@ class PostViewTest(TestCase):
     def test_detail_draft_returns_404(self):
         response = self.client.get(reverse('blog:post_detail', args=['draft']))
         self.assertEqual(response.status_code, 404)
+
+
+class AuthTest(TestCase):
+
+    def test_signup_create_user(self):
+        response = self.client.post(reverse('blog:signup'), {
+            'username': 'test',
+            'password1': 'Blog$Secret2026',
+            'password2': 'Blog$Secret2026',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(User.objects.filter(username='test').exists())
+
+    def test_login(self):
+        User.objects.create_user(username='test', password='Blog$Secret2026')
+        logged_in = self.client.login(username='test', password='Blog$Secret2026')
+        self.assertTrue(logged_in)
+
+
+class PostSlugTest(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='tester', password='Blog$Secret2026')
+
+    def test_slug_generation(self):
+        post = Post.objects.create(
+            title='Мой первый пост',
+            author=self.user,
+            body='text post',
+        )
+        self.assertEqual(post.slug, 'moi-pervyi-post')
+
+    def test_slug_collision_gets_suffix(self):
+        p1 = Post.objects.create(
+            title='Мой первый пост',
+            author=self.user,
+            body='1',
+        )
+        p2 = Post.objects.create(
+            title='Мой первый пост',
+            author=self.user,
+            body='2',
+        )
+        self.assertEqual(p1.slug, 'moi-pervyi-post')
+        self.assertEqual(p2.slug, 'moi-pervyi-post-2')
+
+    def test_slug_not_overwritten_on_edit(self):
+        post = Post.objects.create(
+            title='Мой первый пост',
+            author=self.user,
+            body='text post',
+        )
+        original_slug = post.slug
+        post.title = 'Новый заголовок'
+        post.save()
+        self.assertEqual(post.slug, original_slug)

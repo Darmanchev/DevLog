@@ -3,30 +3,43 @@
 {% block title %}{{ post.title }} - Мой Блог{% endblock %}
 
 {% block content %}
-    <!-- Ссылка назад -->
-    <a href="{% url 'blog:post_list' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-8 transition-colors">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        К списку статей
-    </a>
+    <!-- Навигация "хлебные крошки" (назад) -->
+    <nav aria-label="Назад">
+        <a href="{% url 'blog:post_list' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-8 transition-colors">
+            <svg aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            К списку статей
+        </a>
+    </nav>
 
-    <!-- Контейнер поста -->
+    <!-- Основная статья -->
     <article class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-200">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
-            {{ post.title }}
-        </h1>
         
-        <div class="flex items-center gap-3 pb-8 mb-8 border-b border-gray-200 text-gray-500">
-            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                {{ post.author.username.0|upper }}
-            </div>
-            <div class="flex flex-col">
-                <span class="font-semibold text-gray-900">{{ post.author.username }}</span>
-                <time class="text-sm">{{ post.created_at|date:"j E Y г." }}</time>
-            </div>
-        </div>
+        <!-- Шапка статьи (заголовок, автор, дата) -->
+        <header class="mb-8 pb-8 border-b border-gray-200">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
+                {{ post.title }}
+            </h1>
+            
+            <!-- Семантичный тег address для контактной/авторской информации -->
+            <address class="flex items-center gap-3 text-gray-500 not-italic">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg" aria-hidden="true">
+                    {{ post.author.username.0|upper }}
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-semibold text-gray-900">
+                        <span class="sr-only">Автор:</span> {{ post.author.username }}
+                    </span>
+                    <!-- Тег time с атрибутом datetime в стандарте ISO 8601 -->
+                    <time datetime="{{ post.created_at|date:'c' }}" class="text-sm">
+                        {{ post.created_at|date:"j E Y г." }}
+                    </time>
+                </div>
+            </address>
+        </header>
 
+        <!-- Тело статьи -->
         <div class="text-lg text-gray-700 leading-relaxed space-y-6">
             {{ post.body|linebreaks }}
         </div>
