@@ -1,3 +1,5 @@
+from encodings.punycode import selective_find
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -145,3 +147,45 @@ class PostSlugTest(TestCase):
         post.title = 'Новый заголовок'
         post.save()
         self.assertEqual(post.slug, original_slug)
+
+class PostPermissionTest(TestCase):
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username='author',
+            password='Blog$Secret2026'
+        )
+        self.other = User.objects.create_user(
+            username = 'other',
+            password = 'Blog$Secret2026'
+        )
+        self.post = Post.objects.create(
+            title = 'Пост автора',
+            author = self.author,
+            body = 'текст',
+            status = Post.Status.PUBLISHED,
+        )
+
+    def test_anonymous_cannot_create(self):
+        response = self.client.get(reverse('blog:post_create'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_author_can_edit_own(self):
+        self.client.login(
+            username='author',
+            password='Blog$Secret2026'
+        )
+        response = self.client.get(reverse('blog:post_edit', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_other_cannot_edit(self):
+        self.client.login(username='other', password='Blog$Secret2026')
+        response = self.client.get(reverse('blog:post_edit', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_other_cannot_delete(self):
+        self.client.login(username='other', password='Blog$Secret2026')
+        response = self.client.post(reverse('blog:post_delete', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
