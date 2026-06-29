@@ -7,6 +7,7 @@
     <title>{% block title %}Мой Блог{% endblock %}</title>
     <!-- Подключаем скомпилированный файл Tailwind CSS -->
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col antialiased">
@@ -34,14 +35,11 @@
                     <div class="flex items-center space-x-4 border-l border-gray-200 pl-6">
                         {% if user.is_authenticated %}
                             <!-- Кнопка "Написать пост" -->
-                            <a href="{% url 'blog:post_create' %}" class="hidden sm:inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-2">
-                                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                Написать пост
-                            </a>
-                            
-                            <span class="text-sm text-gray-700">
-                                Привет, <span class="font-bold text-gray-900">{{ user.username }}</span>!
-                        </span>
+                        <a href="{% url 'blog:post_create' %}" class="hidden sm:inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-2">
+                            <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Написать пост
+                        </a>
+                        
                         <!-- Кнопка "Выйти" -->
                         <form method="post" action="{% url 'logout' %}" class="inline m-0">
                             {% csrf_token %}
@@ -70,5 +68,23 @@
         <p class="text-gray-500 text-sm">&copy; <time datetime="{% now 'Y' %}">{% now "Y" %}</time> Мой Блог. Все права защищены.</p>
     </footer>
 
+    <script>
+        function resizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+
+        function resizeTextareas(root) {
+            root.querySelectorAll('textarea[data-autoresize]').forEach(resizeTextarea);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            resizeTextareas(document);
+        });
+
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            resizeTextareas(event.target);
+        });
+    </script>
 </body>
 </html>

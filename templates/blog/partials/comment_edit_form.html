@@ -1,0 +1,54 @@
+<article id="comment-{{ comment.pk }}" class="flex gap-4">
+    <div class="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border border-gray-200" aria-hidden="true">
+        {{ comment.author.username.0|upper }}
+    </div>
+
+    <div class="flex-grow">
+        <form
+            method="POST"
+            hx-post="{% url 'blog:comment_edit' comment.pk %}"
+            hx-target="#comment-{{ comment.pk }}"
+            hx-swap="outerHTML"
+            class="space-y-3"
+        >
+            {% csrf_token %}
+
+            <label for="comment-body-{{ comment.pk }}" class="sr-only">Редактировать комментарий</label>
+            <textarea
+                id="comment-body-{{ comment.pk }}"
+                name="body"
+                required
+                rows="1"
+                data-autoresize
+                oninput="resizeTextarea(this)"
+                class="w-full min-h-16 resize-none overflow-hidden p-3 border border-gray-300 rounded-lg"
+            >{{ form.body.value|default_if_none:'' }}</textarea>
+
+            {% if form.body.errors %}
+                <ul class="text-sm text-red-600 font-medium list-disc list-inside">
+                    {% for error in form.body.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="flex justify-end gap-3">
+                <button
+                    type="button"
+                    hx-get="{% url 'blog:comment_partial' comment.pk %}"
+                    hx-target="#comment-{{ comment.pk }}"
+                    hx-swap="outerHTML"
+                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                    Отмена
+                </button>
+                <button
+                    type="submit"
+                    class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                >
+                    Сохранить
+                </button>
+            </div>
+        </form>
+    </div>
+</article>

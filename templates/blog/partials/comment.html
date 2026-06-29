@@ -1,0 +1,51 @@
+<article id="comment-{{ comment.pk }}" class="flex gap-4">
+    <div class="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border border-gray-200" aria-hidden="true">
+        {{ comment.author.username.0|upper }}
+    </div>
+
+    <div class="flex-grow min-w-0">
+        <header class="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+            <div class="flex flex-wrap items-baseline gap-2">
+                <span class="font-semibold text-gray-900">{{ comment.author.username }}</span>
+                <time datetime="{{ comment.created_at|date:'c' }}" class="text-sm text-gray-500">
+                    {{ comment.created_at|date:"d.m.Y в H:i" }}
+                </time>
+                {% if comment.edited_at %}
+                    <span class="text-xs text-gray-400">изменено</span>
+                {% endif %}
+            </div>
+
+            {% if user == comment.author %}
+                <div class="flex items-center gap-3 text-sm">
+                    <button
+                        type="button"
+                        hx-get="{% url 'blog:comment_edit' comment.pk %}"
+                        hx-target="#comment-{{ comment.pk }}"
+                        hx-swap="outerHTML"
+                        class="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                        Редактировать
+                    </button>
+                    <form
+                        method="POST"
+                        action="{% url 'blog:comment_delete' comment.pk %}"
+                        hx-post="{% url 'blog:comment_delete' comment.pk %}"
+                        hx-target="#comment-{{ comment.pk }}"
+                        hx-swap="delete"
+                        hx-confirm="Удалить комментарий?"
+                        class="inline"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="font-medium text-red-600 hover:text-red-700 transition-colors">
+                            Удалить
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </header>
+
+        <div class="text-gray-700 leading-relaxed break-words [overflow-wrap:anywhere]">
+            {{ comment.body|linebreaks }}
+        </div>
+    </div>
+</article>

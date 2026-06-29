@@ -1,9 +1,7 @@
-from encodings.punycode import selective_find
-
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from .models import Post
+from .models import Comment, Post
 
 User = get_user_model()
 
@@ -91,6 +89,11 @@ class PostViewTest(TestCase):
     def test_detail_draft_returns_404(self):
         response = self.client.get(reverse('blog:post_detail', args=['draft']))
         self.assertEqual(response.status_code, 404)
+
+    def test_author_can_view_own_draft(self):
+        self.client.login(username='tester', password='pass12345')
+        response = self.client.get(reverse('blog:post_detail', args=['draft']))
+        self.assertEqual(response.status_code, 200)
 
 
 class AuthTest(TestCase):
@@ -189,3 +192,128 @@ class PostPermissionTest(TestCase):
         response = self.client.post(reverse('blog:post_delete', args=[self.post.slug]))
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
+
+
+class CommentPermissionTest(TestCase):
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username='author',
+            password='Blog$Secret2026'
+        )
+        self.other = User.objects.create_user(
+            username='other',
+            password='Blog$Secret2026'
+        )
+        self.post = Post.objects.create(
+            title='Пост',
+            author=self.author,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        self.comment = Comment.objects.create(
+            post=self.post,
+            author=self.author,
+            body='Первый комментарий',
+        )
+
+    def test_author_can_edit_own_comment(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_edit', args=[self.comment.pk]),
+            {'body': 'Обновленный комментарий'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Обновленный комментарий')
+
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.body, 'Обновленный комментарий')
+        self.assertIsNotNone(self.comment.edited_at)
+
+    def test_edit_without_text_change_does_not_mark_as_edited(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_edit', args=[self.comment.pk]),
+            {'body': 'Первый комментарий'},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.comment.refresh_from_db()
+        self.assertIsNone(self.comment.edited_at)
+
+    def test_author_gets_inline_edit_form(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.get(reverse('blog:comment_edit', args=[self.comment.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<textarea')
+        self.assertContains(response, 'hx-post=')
+        self.assertContains(response, 'data-autoresize')
+
+    def test_htmx_comment_create_returns_comment_partial(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_create', args=[self.post.slug]),
+            {'body': 'Новый комментарий'},
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Новый комментарий')
+        self.assertContains(response, 'hx-get=')
+        self.assertContains(response, 'hx-swap-oob=')
+        self.assertContains(response, 'id="comments-count"')
+        self.assertTrue(Comment.objects.filter(body='Новый комментарий').exists())
+
+    def test_regular_comment_create_still_redirects(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_create', args=[self.post.slug]),
+            {'body': 'Обычный комментарий'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Comment.objects.filter(body='Обычный комментарий').exists())
+
+    def test_other_cannot_edit_comment(self):
+        self.client.login(username='other', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_edit', args=[self.comment.pk]),
+            {'body': 'Чужая правка'},
+        )
+        self.assertEqual(response.status_code, 403)
+
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.body, 'Первый комментарий')
+
+    def test_author_can_soft_delete_own_comment(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(reverse('blog:comment_delete', args=[self.comment.pk]))
+        self.assertEqual(response.status_code, 302)
+
+        self.comment.refresh_from_db()
+        self.assertTrue(self.comment.is_deleted)
+
+    def test_htmx_delete_returns_empty_response(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.post(
+            reverse('blog:comment_delete', args=[self.comment.pk]),
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="comments-count"')
+
+        self.comment.refresh_from_db()
+        self.assertTrue(self.comment.is_deleted)
+
+    def test_deleted_comment_is_hidden_on_post_detail(self):
+        self.comment.is_deleted = True
+        self.comment.save(update_fields=['is_deleted'])
+
+        response = self.client.get(self.post.get_absolute_url())
+        self.assertNotContains(response, 'Первый комментарий')
+
+    def test_other_cannot_delete_comment(self):
+        self.client.login(username='other', password='Blog$Secret2026')
+        response = self.client.post(reverse('blog:comment_delete', args=[self.comment.pk]))
+        self.assertEqual(response.status_code, 403)
+
+        self.comment.refresh_from_db()
+        self.assertFalse(self.comment.is_deleted)

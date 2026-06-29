@@ -1,0 +1,38 @@
+<div id="comment-form" class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+    <h3 class="text-lg font-bold text-gray-900 mb-4">Написать комментарий</h3>
+
+    <form
+        method="POST"
+        action="{% url 'blog:comment_create' post.slug %}"
+        hx-post="{% url 'blog:comment_create' post.slug %}"
+        hx-target="#comment-form"
+        hx-swap="outerHTML"
+        hx-on::after-request="if (event.detail.successful) document.getElementById('comments-empty')?.remove()"
+    >
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="id_body" class="sr-only">Ваш комментарий</label>
+            <textarea
+                id="id_body"
+                name="body"
+                required
+                rows="4"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none shadow-sm"
+                placeholder="Поделитесь своими мыслями..."
+            >{{ comment_form.body.value|default_if_none:'' }}</textarea>
+
+            {% if comment_form.body.errors %}
+                <ul class="mt-2 text-sm text-red-600 font-medium list-disc list-inside">
+                    {% for error in comment_form.body.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        <div class="flex justify-end">
+            <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                Отправить
+            </button>
+        </div>
+    </form>
+</div>
