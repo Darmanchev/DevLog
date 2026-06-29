@@ -1,0 +1,7 @@
+<span id="comments-count" hx-swap-oob="true">{{ comments_count }}</span>
+
+{% if comments_count == 0 %}
+    <template hx-swap-oob="beforeend:#comments-list">
+        <p id="comments-empty" class="text-gray-500 italic">Пока нет ни одного комментария. Будьте первым!</p>
+    </template>
+{% endif %}
