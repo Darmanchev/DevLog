@@ -1,97 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Регистрация - Мой Блог{% endblock %}
+{% block title %}Регистрация - BlogPortal{% endblock %}
 
 {% block content %}
-<section aria-labelledby="signup-title" class="min-h-[60vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+<section aria-labelledby="signup-title" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 40px 0;">
     
-    <header class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 id="signup-title" class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Создайте аккаунт
+    <header style="text-align: center; margin-bottom: 32px;">
+        <h1 id="signup-title" class="portal-feed-title" style="font-size: 32px; margin-bottom: 8px;">
+            Создать аккаунт
         </h1>
-        <nav aria-label="Альтернативные действия" class="mt-2 text-center text-sm text-gray-600">
-            Уже есть аккаунт?
-            <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                Войдите
-            </a>
-        </nav>
+        <p class="portal-feed-subtitle" style="font-size: 16px;">
+            Уже есть аккаунт? <a href="{% url 'login' %}" style="color: #6366f1; font-weight: 700; text-decoration: none;">Войти</a>
+        </p>
     </header>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow-sm border border-gray-200 sm:rounded-xl sm:px-10">
-            
-            {% if form.errors %}
-                <div role="alert" aria-live="assertive" class="rounded-md bg-red-50 p-4 mb-6 border border-red-200">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg aria-hidden="true" class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h2 class="text-sm font-medium text-red-800">
-                                Пожалуйста, исправьте ошибки ниже.
-                            </h2>
-                        </div>
-                    </div>
+    <div class="portal-card" style="width: 100%; max-width: 480px; padding: 32px;">
+        <form method="POST" action="{% url 'blog:signup' %}" style="display: flex; flex-direction: column; gap: 20px;">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div role="alert" aria-live="assertive" style="background: #fef2f2; border: 2px solid #fecaca; color: #ef4444; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 14px;">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
                 </div>
             {% endif %}
 
-            <form class="space-y-6" method="POST" action="{% url 'blog:signup' %}">
-                {% csrf_token %}
-
-                {% for field in form %}
-                    <div>
-                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                            {{ field.label }}
-                        </label>
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569; font-size: 14px;">
+                        {{ field.label }}
+                    </label>
+                    <div style="position: relative;">
+                        {{ field }}
                         
-                        <div class="mt-1 relative">
-                            <!-- Мы используем встроенный рендеринг Django, но стилизуем его через родительский div -->
-                            <!-- В идеале поля формы стоит пропустить через django-widget-tweaks, но пока применим базовые стили Tailwind -->
-                            <style>
-                                #{{ field.id_for_label }} {
-                                    appearance: none;
-                                    display: block;
-                                    width: 100%;
-                                    padding: 0.5rem 0.75rem;
-                                    border: 1px solid #d1d5db; /* gray-300 */
-                                    border-radius: 0.5rem; /* rounded-lg */
-                                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-                                    transition: all 0.2s;
-                                }
-                                #{{ field.id_for_label }}:focus {
-                                    outline: none;
-                                    border-color: #3b82f6; /* blue-500 */
-                                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* ring-blue-500 */
-                                }
-                            </style>
-                            
-                            {{ field }}
-                        </div>
-                        
-                        <!-- Семантичные подсказки и ошибки поля -->
-                        {% if field.help_text %}
-                            <p class="mt-2 text-xs text-gray-500" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</p>
-                        {% endif %}
-                        
-                        {% if field.errors %}
-                            <ul class="mt-1 text-sm text-red-600" role="alert">
-                                {% for error in field.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
                     </div>
-                {% endfor %}
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        Зарегистрироваться
-                    </button>
+                    {% if field.help_text %}
+                        <p style="margin-top: 6px; font-size: 12px; color: #94a3b8;">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <ul style="margin-top: 6px; font-size: 13px; color: #ef4444; font-weight: 600; list-style: none; padding: 0;">
+                            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
-            </form>
-        </div>
+            {% endfor %}
+
+            <button type="submit" class="portal-button" style="width: 100%; justify-content: center; padding: 14px; border-radius: 12px; margin-top: 12px;">
+                <span class="portal-button-text">Зарегистрироваться</span>
+            </button>
+        </form>
     </div>
 </section>
 {% endblock %}

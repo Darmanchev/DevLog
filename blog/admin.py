@@ -1,12 +1,33 @@
 from django.contrib import admin
-from .models import Post, Comment
+from .models import Category, Comment, Post, Tag, UserProfile
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'updated_at']
+    search_fields = ['user__username', 'bio']
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name']
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name']
 
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'status', 'created_at']
-    list_filter = ['status', 'created_at']
+    list_display = ['title', 'author', 'category', 'status', 'created_at']
+    list_filter = ['status', 'category', 'tags', 'created_at']
     search_fields = ['title', 'body']
+    filter_horizontal = ['tags']
 
 
 @admin.register(Comment)
