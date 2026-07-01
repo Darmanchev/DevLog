@@ -5,9 +5,9 @@
         method="POST"
         action="{% url 'blog:comment_create' post.slug %}"
         hx-post="{% url 'blog:comment_create' post.slug %}"
-        hx-target="#comment-form"
-        hx-swap="outerHTML"
-        hx-on::after-request="if (event.detail.successful) document.getElementById('comments-empty')?.remove()"
+        hx-target="#comments-list"
+        hx-swap="beforeend"
+        hx-on::after-request="if (event.detail.successful) { this.reset(); document.getElementById('comments-empty')?.remove(); }"
     >
         {% csrf_token %}
         <div class="mb-4">

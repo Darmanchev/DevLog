@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal UI адаптация Django-блога</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-soft: #f1f5f9;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --primary: #4f46e5;
+            --primary-soft: #eef2ff;
+            --secondary: #ec4899;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 20px 48px rgba(15, 23, 42, 0.10);
+            --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            letter-spacing: 0;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        .app {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 288px minmax(0, 1fr);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: var(--surface);
+            border-right: 1px solid var(--line);
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 28px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(79, 70, 229, 0.28);
+            font-weight: 900;
+        }
+
+        .brand strong {
+            font-size: 21px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .brand span {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .side-nav {
+            padding: 24px 16px;
+        }
+
+        .nav-label {
+            margin: 18px 14px 12px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .nav-link {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 16px;
+            padding: 0 14px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 750;
+            transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+        }
+
+        .nav-link:hover {
+            background: #f8fafc;
+            color: var(--ink);
+            transform: translateX(2px);
+        }
+
+        .nav-link.active {
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            color: currentColor;
+        }
+
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 12px;
+        }
+
+        .tag {
+            min-height: 30px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .side-profile {
+            padding: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 18px;
+            padding: 12px;
+            transition: background 180ms ease;
+        }
+
+        .profile-card:hover {
+            background: #f8fafc;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dbeafe, #fce7f3);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 900;
+            border: 2px solid #ffffff;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+        }
+
+        .profile-meta {
+            min-width: 0;
+        }
+
+        .profile-meta strong,
+        .profile-meta span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-meta strong {
+            font-size: 14px;
+        }
+
+        .profile-meta span {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 22px;
+            background: rgba(255, 255, 255, 0.82);
+            border-bottom: 1px solid var(--line);
+            padding: 0 32px;
+            backdrop-filter: blur(18px);
+            position: sticky;
+            top: 0;
+            z-index: 8;
+        }
+
+        .mobile-brand {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+        }
+
+        .search {
+            width: min(100%, 480px);
+            position: relative;
+        }
+
+        .search svg {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--ink);
+            outline: none;
+            padding: 0 18px 0 46px;
+            font-size: 14px;
+            font-weight: 650;
+            transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .search input:focus {
+            background: #ffffff;
+            border-color: rgba(79, 70, 229, 0.55);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.10);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .icon-button,
+        .button {
+            border: 0;
+            cursor: pointer;
+            transition: transform 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .icon-button {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: transparent;
+            color: #94a3b8;
+            position: relative;
+        }
+
+        .icon-button:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .notification-dot {
+            width: 9px;
+            height: 9px;
+            position: absolute;
+            top: 9px;
+            right: 10px;
+            border-radius: 50%;
+            background: var(--danger);
+            border: 2px solid #ffffff;
+        }
+
+        .button {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            border-radius: 999px;
+            padding: 0 18px;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 850;
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.13);
+            white-space: nowrap;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            background: #1e293b;
+        }
+
+        .button-soft {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid var(--line);
+            box-shadow: none;
+        }
+
+        .button-soft:hover {
+            background: #f8fafc;
+        }
+
+        .button-danger {
+            background: #fff1f2;
+            color: #e11d48;
+            box-shadow: none;
+        }
+
+        .button-danger:hover {
+            background: #ffe4e6;
+        }
+
+        .scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .scroll::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .container {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: clamp(30px, 4vw, 42px);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+        }
+
+        .lead {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .template-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid var(--line);
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .hero {
+            min-height: 392px;
+            display: grid;
+            align-items: end;
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            background: #0f172a;
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+        }
+
+        .hero img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            object-fit: cover;
+            opacity: 0.82;
+            transform: scale(1.01);
+            transition: transform 700ms ease;
+        }
+
+        .hero:hover img {
+            transform: scale(1.06);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.88));
+        }
+
+        .hero-content {
+            width: min(760px, 100%);
+            position: relative;
+            z-index: 1;
+            padding: 36px;
+            color: #ffffff;
+        }
+
+        .label-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .chip {
+            min-height: 28px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0 11px;
+            background: rgba(79, 70, 229, 0.92);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .chip-pink {
+            background: rgba(236, 72, 153, 0.92);
+        }
+
+        .chip-soft {
+            background: #eef2ff;
+            color: var(--primary);
+        }
+
+        .hero h2 {
+            margin: 0 0 16px;
+            font-size: clamp(30px, 5vw, 48px);
+            line-height: 1.03;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-meta,
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .section-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin: 30px 0 18px;
+        }
+
+        .section-row h2 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: -0.03em;
+        }
+
+        .section-link {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .post-card {
+            min-height: 386px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #f1f5f9;
+            border-radius: 28px;
+            background: #ffffff;
+            padding: 12px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .card-cover {
+            height: 178px;
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+        }
+
+        .card-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 500ms ease;
+        }
+
+        .post-card:hover .card-cover img {
+            transform: scale(1.05);
+        }
+
+        .read-time {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            min-height: 28px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #0f172a;
+            padding: 0 9px;
+            font-size: 12px;
+            font-weight: 900;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 18px 10px 8px;
+        }
+
+        .category {
+            color: var(--secondary);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .post-card h3 {
+            margin: 9px 0 9px;
+            font-size: 19px;
+            line-height: 1.25;
+            letter-spacing: -0.02em;
+        }
+
+        .post-card p,
+        .muted {
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .post-card p {
+            flex: 1;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 14px;
+        }
+
+        .author {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .like {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+
+        .like:hover {
+            background: #fff1f2;
+            color: var(--danger);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 24px;
+            align-items: start;
+            margin-bottom: 36px;
+        }
+
+        .panel {
+            border: 1px solid #f1f5f9;
+            border-radius: 28px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 22px 24px;
+        }
+
+        .panel-head h2,
+        .panel-head h3 {
+            margin: 0;
+            font-size: 21px;
+            letter-spacing: -0.03em;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .article-preview h2 {
+            margin: 12px 0 12px;
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.05;
+            letter-spacing: -0.05em;
+        }
+
+        .article-preview .meta {
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+
+        .article-preview p {
+            color: #475569;
+            font-size: 17px;
+            line-height: 1.72;
+        }
+
+        .comment {
+            display: grid;
+            grid-template-columns: 40px 1fr;
+            gap: 12px;
+            border-top: 1px solid #f1f5f9;
+            padding: 18px 0;
+        }
+
+        .comment:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .comment strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .comment time {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .comment p {
+            margin: 8px 0 0;
+            color: #475569;
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .input,
+        .textarea,
+        .select {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: var(--ink);
+            outline: none;
+            padding: 13px 14px;
+            transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+        }
+
+        .input:focus,
+        .textarea:focus,
+        .select:focus {
+            border-color: rgba(79, 70, 229, 0.6);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.10);
+        }
+
+        .textarea {
+            min-height: 154px;
+            resize: vertical;
+            line-height: 1.55;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .dashboard-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .dashboard-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            border: 1px solid #f1f5f9;
+            border-radius: 22px;
+            background: #ffffff;
+            padding: 18px;
+        }
+
+        .dashboard-item h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            line-height: 1.25;
+        }
+
+        .status {
+            min-height: 28px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .status-live {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .status-draft {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .action-row {
+            display: flex;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .small-button {
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .stat {
+            border: 1px solid #f1f5f9;
+            border-radius: 26px;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .stat strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 32px;
+            letter-spacing: -0.05em;
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .template-note {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .template-note div {
+            border: 1px dashed #cbd5e1;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 16px;
+        }
+
+        .template-note strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        .template-note span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .auth-preview {
+            display: grid;
+            grid-template-columns: 420px minmax(0, 1fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 40px;
+        }
+
+        .auth-copy {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #4f46e5, #ec4899);
+            color: #ffffff;
+            padding: 34px;
+            box-shadow: var(--shadow);
+        }
+
+        .auth-copy h2 {
+            max-width: 620px;
+            margin: 0 0 14px;
+            font-size: clamp(30px, 4vw, 48px);
+            line-height: 1.05;
+            letter-spacing: -0.05em;
+        }
+
+        .auth-copy p {
+            max-width: 560px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.65;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1100px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .mobile-brand {
+                display: flex;
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .workspace,
+            .auth-preview {
+                grid-template-columns: 1fr;
+            }
+
+            .template-note {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .app {
+                min-height: 100vh;
+            }
+
+            .main {
+                overflow: visible;
+            }
+
+            .topbar {
+                height: auto;
+                align-items: stretch;
+                flex-direction: column;
+                padding: 16px;
+                position: static;
+            }
+
+            .search {
+                width: 100%;
+            }
+
+            .top-actions {
+                justify-content: space-between;
+            }
+
+            .scroll {
+                overflow: visible;
+                padding: 18px;
+            }
+
+            .page-head,
+            .section-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero {
+                min-height: 460px;
+                border-radius: 26px;
+            }
+
+            .hero-content {
+                padding: 24px;
+            }
+
+            .cards,
+            .stats-grid,
+            .template-note {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-item {
+                grid-template-columns: 1fr;
+            }
+
+            .action-row,
+            .form-actions {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar" aria-label="Боковая навигация">
+            <div>
+                <a class="brand" href="#" aria-label="На главную">
+                    <span class="logo-mark">B</span>
+                    <strong>Blog<span>Portal</span></strong>
+                </a>
+
+                <nav class="side-nav">
+                    <p class="nav-label">Меню</p>
+                    <a class="nav-link active" href="#feed">
+                        <span class="nav-icon">⌂</span>
+                        Лента
+                    </a>
+                    <a class="nav-link" href="#article">
+                        <span class="nav-icon">◫</span>
+                        Статья
+                    </a>
+                    <a class="nav-link" href="#editor">
+                        <span class="nav-icon">✎</span>
+                        Написать пост
+                    </a>
+                    <a class="nav-link" href="#my-posts">
+                        <span class="nav-icon">▦</span>
+                        Мои посты
+                    </a>
+                    <a class="nav-link" href="#auth">
+                        <span class="nav-icon">◉</span>
+                        Вход
+                    </a>
+
+                    <p class="nav-label">Категории</p>
+                    <div class="tag-cloud">
+                        <span class="tag"># Python</span>
+                        <span class="tag"># Django</span>
+                        <span class="tag"># AI</span>
+                        <span class="tag"># Frontend</span>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="side-profile">
+                <div class="profile-card">
+                    <span class="avatar">A</span>
+                    <div class="profile-meta">
+                        <strong>Александр</strong>
+                        <span>alex@example.com</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="mobile-brand">
+                    <span class="logo-mark">B</span>
+                    <span>BlogPortal</span>
+                </div>
+
+                <label class="search">
+                    <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"></path>
+                    </svg>
+                    <input type="search" placeholder="Поиск статей, авторов или тегов...">
+                </label>
+
+                <div class="top-actions">
+                    <button class="icon-button" type="button" aria-label="Уведомления" title="Уведомления">
+                        <span class="notification-dot"></span>
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1"></path>
+                        </svg>
+                    </button>
+                    <a class="button" href="#editor">
+                        <span aria-hidden="true">+</span>
+                        <span>Написать</span>
+                    </a>
+                </div>
+            </header>
+
+            <main class="scroll">
+                <div class="container">
+                    <section class="page-head" aria-labelledby="page-title">
+                        <div>
+                            <h1 id="page-title">Добро пожаловать в BlogPortal</h1>
+                            <p class="lead">Так дизайн `demo_portal.html` может лечь на текущий Django-блог без смены логики.</p>
+                        </div>
+                        <div class="template-pills" aria-label="Связь с шаблонами">
+                            <span class="pill">base.html</span>
+                            <span class="pill">post_list.html</span>
+                            <span class="pill">post_detail.html</span>
+                            <span class="pill">post_form.html</span>
+                        </div>
+                    </section>
+
+                    <section id="feed" aria-labelledby="feed-title">
+                        <article class="hero">
+                            <img src="../static/img/editorial-demo-cover.png" alt="Рабочее место автора блога">
+                            <div class="hero-content">
+                                <div class="label-row">
+                                    <span class="chip">Featured</span>
+                                    <span class="chip chip-pink">Django</span>
+                                </div>
+                                <h2 id="feed-title">Как превратить обычную ленту постов в современный портал</h2>
+                                <div class="hero-meta">
+                                    <span class="avatar">EV</span>
+                                    <span>Елена Волкова</span>
+                                    <span>2 часа назад</span>
+                                    <span>12.4K просмотров</span>
+                                </div>
+                            </div>
+                        </article>
+
+                        <div class="section-row">
+                            <h2>Последние статьи</h2>
+                            <a class="section-link" href="#">Смотреть все →</a>
+                        </div>
+
+                        <div class="cards">
+                            <article class="post-card">
+                                <div class="card-cover">
+                                    <img src="../static/img/editorial-demo-cover.png" alt="Обложка статьи">
+                                    <span class="read-time">5 мин</span>
+                                </div>
+                                <div class="card-body">
+                                    <span class="category">Web Design</span>
+                                    <h3><a href="#">10 правил аккуратной архитектуры CSS в Django</a></h3>
+                                    <p>Как не превратить шаблоны в кашу из классов и повторяющихся inline-стилей.</p>
+                                    <footer class="card-footer">
+                                        <span class="author"><span class="avatar">Д</span> Дмитрий</span>
+                                        <button class="like" type="button" aria-label="Добавить в избранное">♡</button>
+                                    </footer>
+                                </div>
+                            </article>
+
+                            <article class="post-card">
+                                <div class="card-cover" style="background: linear-gradient(135deg, #0f172a, #4f46e5);">
+                                    <span style="position:absolute; inset:0; display:grid; place-items:center; color:white; font-size:34px; font-weight:900;">Django</span>
+                                    <span class="read-time">8 мин</span>
+                                </div>
+                                <div class="card-body">
+                                    <span class="category" style="color:#10b981;">Backend</span>
+                                    <h3><a href="#">Почему partials для комментариев уже хорошая основа</a></h3>
+                                    <p>HTMX можно оставить почти без изменений: меняем только визуальную оболочку.</p>
+                                    <footer class="card-footer">
+                                        <span class="author"><span class="avatar">И</span> Иван</span>
+                                        <button class="like" type="button" aria-label="Добавить в избранное">♡</button>
+                                    </footer>
+                                </div>
+                            </article>
+
+                            <article class="post-card">
+                                <div class="card-cover" style="background: linear-gradient(135deg, #ec4899, #f97316);">
+                                    <span style="position:absolute; inset:0; display:grid; place-items:center; color:white; font-size:34px; font-weight:900;">UI</span>
+                                    <span class="read-time">6 мин</span>
+                                </div>
+                                <div class="card-body">
+                                    <span class="category" style="color:#3b82f6;">Обновление</span>
+                                    <h3><a href="#">Как оформить формы входа и регистрации единым стилем</a></h3>
+                                    <p>Один набор классов для input, textarea, ошибок, подсказок и кнопок.</p>
+                                    <footer class="card-footer">
+                                        <span class="author"><span class="avatar">М</span> Мария</span>
+                                        <button class="like" type="button" aria-label="Добавить в избранное">♡</button>
+                                    </footer>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="template-note" aria-label="План адаптации шаблонов">
+                        <div>
+                            <strong>base.html</strong>
+                            <span>Сайдбар, верхняя панель, поиск, кнопка создания поста и профиль.</span>
+                        </div>
+                        <div>
+                            <strong>post_list.html</strong>
+                            <span>Hero-пост, сетка карточек и пустое состояние для отсутствия постов.</span>
+                        </div>
+                        <div>
+                            <strong>post_detail.html</strong>
+                            <span>Большая статья, действия автора, комментарии и форма ответа.</span>
+                        </div>
+                        <div>
+                            <strong>forms</strong>
+                            <span>Общий стиль для поста, входа, регистрации и ошибок валидации.</span>
+                        </div>
+                    </section>
+
+                    <section class="stats-grid" aria-label="Демо статистика">
+                        <div class="stat">
+                            <strong>24</strong>
+                            <span>поста в ленте</span>
+                        </div>
+                        <div class="stat">
+                            <strong>148</strong>
+                            <span>комментариев</span>
+                        </div>
+                        <div class="stat">
+                            <strong>7</strong>
+                            <span>черновиков автора</span>
+                        </div>
+                    </section>
+
+                    <section class="workspace" id="article" aria-label="Детальная статья и комментарии">
+                        <article class="panel article-preview">
+                            <div class="panel-head">
+                                <h2>Детальная статья</h2>
+                                <div class="top-actions">
+                                    <a class="button button-soft" href="#">Редактировать</a>
+                                    <a class="button button-danger" href="#">Удалить</a>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <span class="chip chip-soft">post_detail.html</span>
+                                <h2>Будущее разработки: как AI меняет привычный блог</h2>
+                                <div class="meta">
+                                    <span class="avatar">EV</span>
+                                    <span>Елена Волкова</span>
+                                    <time datetime="2026-06-29">29 июня 2026</time>
+                                </div>
+                                <p>Страница статьи в таком стиле становится центральным рабочим экраном: сверху действия автора, ниже текст, а комментарии остаются рядом в понятной структуре.</p>
+                                <p>Для переноса не нужно менять модели или views. Достаточно заменить разметку контейнеров и привести кнопки, поля и карточки к единой дизайн-системе.</p>
+                            </div>
+                        </article>
+
+                        <aside class="panel" aria-labelledby="comments-title">
+                            <div class="panel-head">
+                                <h3 id="comments-title">Комментарии</h3>
+                                <span class="pill">3 новых</span>
+                            </div>
+                            <div class="panel-body">
+                                <article class="comment">
+                                    <span class="avatar">A</span>
+                                    <div>
+                                        <strong>Александр</strong>
+                                        <time datetime="2026-06-29T12:30">сегодня в 12:30</time>
+                                        <p>Вот такой формат мне больше нравится: он выглядит как продукт, а не просто страница с текстом.</p>
+                                    </div>
+                                </article>
+                                <article class="comment">
+                                    <span class="avatar">Н</span>
+                                    <div>
+                                        <strong>Ника</strong>
+                                        <time datetime="2026-06-29T11:10">сегодня в 11:10</time>
+                                        <p>Комментарии можно оставить HTMX, только стили заменить на portal-вариант.</p>
+                                    </div>
+                                </article>
+
+                                <form class="form-grid">
+                                    <div class="field">
+                                        <label for="comment-body">Ваш комментарий</label>
+                                        <textarea id="comment-body" class="textarea" placeholder="Поделитесь мыслями..."></textarea>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button class="button" type="button">Отправить</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </aside>
+                    </section>
+
+                    <section class="workspace" id="editor" aria-label="Форма создания поста">
+                        <form class="panel">
+                            <div class="panel-head">
+                                <h2>Написать новый пост</h2>
+                                <span class="pill">post_form.html</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label for="post-title">Заголовок</label>
+                                        <input id="post-title" class="input" type="text" value="Как адаптировать portal-дизайн под Django">
+                                    </div>
+                                    <div class="field">
+                                        <label for="post-status">Статус</label>
+                                        <select id="post-status" class="select">
+                                            <option>Опубликован</option>
+                                            <option>Черновик</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label for="post-body">Текст</label>
+                                        <textarea id="post-body" class="textarea">Сначала переносим shell: sidebar, topbar, контейнер. Потом отдельно приводим карточки, статью, комментарии и формы.</textarea>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <a class="button button-soft" href="#">Отмена</a>
+                                    <button class="button" type="button">Сохранить пост</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <aside class="panel">
+                            <div class="panel-head">
+                                <h3>Почему перенос не тяжелый</h3>
+                            </div>
+                            <div class="panel-body muted">
+                                <p>Проект уже использует общий `base.html`, отдельные partials для комментариев и Tailwind. Значит, можно идти по слоям: сначала общий layout, затем страницы.</p>
+                                <p>Самая аккуратная часть работы: убрать дублирующиеся inline-стили из форм и заменить их общими классами.</p>
+                            </div>
+                        </aside>
+                    </section>
+
+                    <section id="my-posts" class="panel" aria-labelledby="my-posts-title">
+                        <div class="panel-head">
+                            <h2 id="my-posts-title">Мои посты</h2>
+                            <a class="button" href="#editor">+ Написать</a>
+                        </div>
+                        <div class="panel-body">
+                            <div class="dashboard-list">
+                                <article class="dashboard-item">
+                                    <div>
+                                        <h3><a href="#">Лента постов, которую приятно поддерживать</a></h3>
+                                        <div class="meta">
+                                            <time datetime="2026-06-20">20 июня</time>
+                                            <span class="status status-live">Опубликован</span>
+                                        </div>
+                                        <p class="muted">Как разделить шаблоны, состояния и действия, чтобы блог рос без хаоса.</p>
+                                    </div>
+                                    <div class="action-row">
+                                        <a class="small-button" href="#">Редактировать</a>
+                                        <a class="small-button" href="#">Удалить</a>
+                                    </div>
+                                </article>
+
+                                <article class="dashboard-item">
+                                    <div>
+                                        <h3><a href="#">Идеи для новой страницы профиля</a></h3>
+                                        <div class="meta">
+                                            <time datetime="2026-06-12">12 июня</time>
+                                            <span class="status status-draft">Черновик</span>
+                                        </div>
+                                        <p class="muted">Набросок будущего профиля автора с публикациями и краткой биографией.</p>
+                                    </div>
+                                    <div class="action-row">
+                                        <a class="small-button" href="#">Редактировать</a>
+                                        <a class="small-button" href="#">Удалить</a>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="auth" class="auth-preview" aria-label="Авторизация">
+                        <form class="panel">
+                            <div class="panel-head">
+                                <h2>Вход</h2>
+                                <span class="pill">login.html</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label for="username">Имя пользователя</label>
+                                        <input id="username" class="input" type="text" autocomplete="username">
+                                    </div>
+                                    <div class="field">
+                                        <label for="password">Пароль</label>
+                                        <input id="password" class="input" type="password" autocomplete="current-password">
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="button" type="button">Войти</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="auth-copy">
+                            <h2>Авторизация тоже может быть частью portal-интерфейса</h2>
+                            <p>Login и signup не требуют новой логики. Их можно привести к этому же стилю полей, ошибок и кнопок, чтобы весь блог ощущался одной системой.</p>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

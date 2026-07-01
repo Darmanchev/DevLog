@@ -259,7 +259,7 @@ class CommentPermissionTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Новый комментарий')
         self.assertContains(response, 'hx-get=')
-        self.assertContains(response, 'hx-swap-oob=')
+        self.assertContains(response, 'hx-swap-oob="true"')
         self.assertContains(response, 'id="comments-count"')
         self.assertTrue(Comment.objects.filter(body='Новый комментарий').exists())
 
@@ -317,3 +317,39 @@ class CommentPermissionTest(TestCase):
 
         self.comment.refresh_from_db()
         self.assertFalse(self.comment.is_deleted)
+
+class MyPostListViewTest(TestCase):
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username='author',
+            password='Blog$Secret2026'
+        )
+        self.other = User.objects.create_user(
+            username='other',
+            password='Blog$Secret2026'
+        )
+        self.author_post = Post.objects.create(
+            title='Пост автора',
+            author=self.author,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        self.other_post = Post.objects.create(
+            title='Чужой пост',
+            author=self.other,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+
+    def test_anonymous_cannot_view_my_posts(self):
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_user_sees_only_own_posts(self):
+        self.client.login(username='author', password='Blog$Secret2026')
+        response = self.client.get(reverse('blog:my_posts'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Пост автора')
+        self.assertNotContains(response, 'Чужой пост')

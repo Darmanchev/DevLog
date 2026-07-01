@@ -16,12 +16,26 @@ def is_htmx(request):
 
 
 class PostListView(ListView):
-    # Какую выборку данных использовать
-    queryset = Post.objects.filter(status=Post.Status.PUBLISHED)
     # Как переменная будет называться в шаблоне (по умолчанию object_list)
     context_object_name = 'posts'
     # Какой шаблон использовать
     template_name = 'blog/post_list.html'
+
+    def get_queryset(self):
+        queryset = Post.objects.filter(status=Post.Status.PUBLISHED).select_related('author')
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query)
+                | Q(body__icontains=query)
+                | Q(author__username__icontains=query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        return context
 
 class PostDetailView(DetailView):
     template_name = 'blog/post_detail.html'
@@ -97,10 +111,13 @@ def comment_create(request, slug):
                     'comments_count': post.comments.filter(is_deleted=False).count(),
                 })
         elif is_htmx(request):
-            return render(request, 'blog/partials/comment_form.html', {
+            response = render(request, 'blog/partials/comment_form.html', {
                 'post': post,
                 'comment_form': form,
             })
+            response['HX-Retarget'] = '#comment-form'
+            response['HX-Reswap'] = 'outerHTML'
+            return response
     return redirect(post.get_absolute_url())
 
 @login_required
@@ -157,3 +174,14 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
                 'comments_count': comment.post.comments.filter(is_deleted=False).count(),
             })
         return redirect(comment.post.get_absolute_url())
+
+
+class MyPostListView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'blog/my_posts.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            author=self.request.user,
+        ).order_by('-created_at')

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои посты - Мой Блог{% endblock %}
+
+{% block content %}
+<section>
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Мои посты</h1>
+        <p class="mt-2 text-gray-500">Черновики и опубликованные записи.</p>
+    </header>
+
+    <div class="flex flex-col gap-6">
+        {% for post in posts %}
+            <article class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <header class="mb-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">
+                                <a href="{{ post.get_absolute_url }}" class="text-gray-900 hover:text-blue-600 transition-colors">
+                                    {{ post.title }}
+                                </a>
+                            </h2>
+
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <span>
+                                    {{ post.created_at|date:"d M Y" }}
+                                </span>
+
+                                {% if post.status == post.Status.PUBLISHED %}
+                                    <span class="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-md">
+                                        Опубликован
+                                    </span>
+                                {% else %}
+                                    <span class="text-yellow-700 bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-md">
+                                        Черновик
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 text-sm">
+                            <a href="{% url 'blog:post_edit' post.slug %}" class="font-medium text-blue-600 hover:text-blue-700">
+                                Редактировать
+                            </a>
+                            <a href="{% url 'blog:post_delete' post.slug %}" class="font-medium text-red-600 hover:text-red-700">
+                                Удалить
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <p class="text-gray-600 leading-relaxed">
+                    {{ post.body|truncatewords:30 }}
+                </p>
+            </article>
+        {% empty %}
+            <div class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+                <p class="text-gray-500">У вас пока нет постов.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

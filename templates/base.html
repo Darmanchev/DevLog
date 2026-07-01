@@ -5,68 +5,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Мой Блог{% endblock %}</title>
-    <!-- Подключаем скомпилированный файл Tailwind CSS -->
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <link rel="stylesheet" href="{% static 'css/portal.css' %}">
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col antialiased">
+<body class="portal-body antialiased">
+    <div class="portal-app">
+        <aside class="portal-sidebar" aria-label="Боковая навигация">
+            <div>
+                <a href="{% url 'blog:post_list' %}" class="portal-brand" aria-label="На главную страницу">
+                    <span class="portal-logo-mark">B</span>
+                    <span class="portal-brand-text">Blog<span>Portal</span></span>
+                </a>
 
-    <!-- Шапка сайта -->
-    <header class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- Логотип -->
-            <a href="{% url 'blog:post_list' %}" class="text-2xl font-extrabold tracking-tight text-gray-900" aria-label="На главную страницу">
-                My<span class="text-blue-600">Blog</span>
-            </a>
-            
-            <!-- Правая часть (Навигация + Профиль) -->
-            <div class="flex items-center space-x-6">
-                <!-- Основная навигация -->
-                <nav aria-label="Основная навигация">
-                    <ul class="flex items-center m-0 p-0 list-none">
-                        <li>
-                            <a href="{% url 'blog:post_list' %}" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">Главная</a>
-                        </li>
-                    </ul>
-                </nav>
+                <nav class="portal-side-nav" aria-label="Основная навигация">
+                    <p class="portal-nav-label">Меню</p>
 
-                    <!-- Блок профиля пользователя -->
-                    <div class="flex items-center space-x-4 border-l border-gray-200 pl-6">
-                        {% if user.is_authenticated %}
-                            <!-- Кнопка "Написать пост" -->
-                        <a href="{% url 'blog:post_create' %}" class="hidden sm:inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-2">
-                            <svg class="-ml-1 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            Написать пост
+                    <a href="{% url 'blog:post_list' %}" class="portal-nav-link is-active">
+                        <span class="portal-nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 12 2-2m0 0 7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11 2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"></path>
+                            </svg>
+                        </span>
+                        Лента
+                    </a>
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'blog:my_posts' %}" class="portal-nav-link">
+                            <span class="portal-nav-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"></path>
+                                </svg>
+                            </span>
+                            Мои посты
                         </a>
-                        
-                        <!-- Кнопка "Выйти" -->
-                        <form method="post" action="{% url 'logout' %}" class="inline m-0">
+
+                        <a href="{% url 'blog:post_create' %}" class="portal-nav-link">
+                            <span class="portal-nav-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </span>
+                            Написать
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="portal-nav-link">
+                            <span class="portal-nav-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4m-5-4 5-5m0 0-5-5m5 5H3"></path>
+                                </svg>
+                            </span>
+                            Войти
+                        </a>
+                    {% endif %}
+
+                    <p class="portal-nav-label">Категории</p>
+                    <div class="portal-tag-cloud" aria-label="Категории блога">
+                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Python</a>
+                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Django</a>
+                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># AI</a>
+                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Frontend</a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="portal-side-profile">
+                {% if user.is_authenticated %}
+                    <div class="portal-profile-card">
+                        <span class="portal-avatar" aria-hidden="true">{{ user.username.0|upper }}</span>
+                        <div class="portal-profile-meta">
+                            <strong>{{ user.username }}</strong>
+                            <span>Автор блога</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="portal-profile-card">
+                        <span class="portal-avatar" aria-hidden="true">?</span>
+                        <div class="portal-profile-meta">
+                            <strong>Гость</strong>
+                            <span>Войдите в аккаунт</span>
+                        </div>
+                    </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <div class="portal-shell">
+            <header class="portal-topbar">
+                <a href="{% url 'blog:post_list' %}" class="portal-mobile-brand" aria-label="На главную страницу">
+                    <span class="portal-logo-mark">B</span>
+                    <span>BlogPortal</span>
+                </a>
+
+                <form class="portal-search" action="{% url 'blog:post_list' %}" method="get" role="search">
+                    <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"></path>
+                    </svg>
+                    <label for="site-search" class="sr-only">Поиск статей</label>
+                    <input id="site-search" name="q" type="search" placeholder="Поиск статей, авторов или тегов..." value="{{ request.GET.q }}">
+                </form>
+
+                <div class="portal-top-actions">
+                    <button class="portal-icon-button" type="button" aria-label="Уведомления" title="Уведомления">
+                        <span class="portal-notification-dot" aria-hidden="true"></span>
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1"></path>
+                        </svg>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'blog:post_create' %}" class="portal-button">
+                            <span aria-hidden="true">+</span>
+                            <span class="portal-button-text">Написать</span>
+                        </a>
+                        <form method="post" action="{% url 'logout' %}" class="m-0">
                             {% csrf_token %}
-                            <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-                                Выйти
+                            <button type="submit" class="portal-button portal-button-soft">
+                                <span class="portal-button-text">Выйти</span>
+                                <span aria-hidden="true">↗</span>
                             </button>
                         </form>
                     {% else %}
-                        <!-- Кнопки "Войти" и "Регистрация" -->
-                        <a href="{% url 'login' %}" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">Войти</a>
-                        <a href="{% url 'blog:signup' %}" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors shadow-sm">Регистрация</a>
+                        <a href="{% url 'login' %}" class="portal-button portal-button-soft">Войти</a>
+                        <a href="{% url 'blog:signup' %}" class="portal-button">
+                            <span class="portal-button-text">Регистрация</span>
+                            <span aria-hidden="true">+</span>
+                        </a>
                     {% endif %}
                 </div>
-            </div>
+            </header>
+
+            <main class="portal-content">
+                <div class="portal-page">
+                    {% block content %}
+                    {% endblock content %}
+
+                    <footer class="portal-footer">
+                        <p>&copy; <time datetime="{% now 'Y' %}">{% now "Y" %}</time> Мой Блог. Все права защищены.</p>
+                    </footer>
+                </div>
+            </main>
         </div>
-    </header>
-
-    <!-- Основной контент страницы -->
-    <main class="flex-grow w-full max-w-4xl mx-auto my-8 px-6">
-        {% block content %}
-        {% endblock content %}
-    </main>
-
-    <!-- Подвал сайта -->
-    <footer class="bg-white border-t border-gray-200 text-center py-6 mt-auto">
-        <p class="text-gray-500 text-sm">&copy; <time datetime="{% now 'Y' %}">{% now "Y" %}</time> Мой Блог. Все права защищены.</p>
-    </footer>
+    </div>
 
     <script>
         function resizeTextarea(textarea) {

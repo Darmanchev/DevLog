@@ -1,7 +1,3 @@
-{% include 'blog/partials/comment_form.html' %}
-
-<template hx-swap-oob="beforeend:#comments-list">
-    {% include 'blog/partials/comment.html' %}
-</template>
+{% include 'blog/partials/comment.html' %}
 
 <span id="comments-count" hx-swap-oob="true">{{ comments_count }}</span>
