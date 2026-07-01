@@ -1,8 +1,9 @@
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from .forms import PostForm
 from .models import Category, Comment, Post, Tag, UserProfile
+from .templatetags.blog_extras import markdown_format, read_time
 
 User = get_user_model()
 
@@ -206,6 +207,11 @@ class PostViewTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('tags', form.errors)
 
+    def test_post_form_includes_cover_image(self):
+        form = PostForm()
+
+        self.assertIn('cover_image', form.fields)
+
     def test_detail_shows_related_posts_by_category_or_tag(self):
         category = Category.objects.create(name='Django')
         tag = Tag.objects.create(name='Forms')
@@ -281,6 +287,29 @@ class PostViewTest(TestCase):
         self.assertEqual(posts[0], discussed)
         self.assertIn(quiet, posts)
 
+    def test_list_can_sort_by_popular_likes(self):
+        quiet = Post.objects.create(
+            title='Тихий пост',
+            slug='quiet-liked-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        popular = Post.objects.create(
+            title='Популярный пост',
+            slug='popular-liked-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        popular.likes.add(self.user)
+
+        response = self.client.get(reverse('blog:post_list'), {'sort': 'popular'})
+
+        posts = list(response.context['posts'])
+        self.assertEqual(posts[0], popular)
+        self.assertIn(quiet, posts)
+
     def test_list_shows_active_search_filter(self):
         response = self.client.get(reverse('blog:post_list'), {'q': 'Опубликованный'})
 
@@ -318,6 +347,21 @@ class AuthTest(TestCase):
         User.objects.create_user(username='test', password='Blog$Secret2026')
         logged_in = self.client.login(username='test', password='Blog$Secret2026')
         self.assertTrue(logged_in)
+
+
+class TemplateFilterTest(TestCase):
+
+    def test_read_time_rounds_up(self):
+        text = ' '.join(['word'] * 201)
+
+        self.assertEqual(read_time(text), 2)
+
+    def test_markdown_escapes_raw_html(self):
+        html = markdown_format('<script>alert("x")</script> **жирный**')
+
+        self.assertNotIn('<script>', html)
+        self.assertIn('&lt;script&gt;', html)
+        self.assertIn('<strong>жирный</strong>', html)
 
 
 class PostSlugTest(TestCase):
@@ -524,6 +568,77 @@ class CommentPermissionTest(TestCase):
 
         self.comment.refresh_from_db()
         self.assertFalse(self.comment.is_deleted)
+
+
+class LikeViewTest(TestCase):
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username='author',
+            password='Blog$Secret2026'
+        )
+        self.reader = User.objects.create_user(
+            username='reader',
+            password='Blog$Secret2026'
+        )
+        self.post = Post.objects.create(
+            title='Публичный пост',
+            author=self.author,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        self.draft = Post.objects.create(
+            title='Черновик',
+            author=self.author,
+            body='секрет',
+            status=Post.Status.DRAFT,
+        )
+
+    def test_toggle_like_requires_post(self):
+        self.client.login(username='reader', password='Blog$Secret2026')
+
+        response = self.client.get(reverse('blog:toggle_like', args=[self.post.pk]))
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_toggle_like_adds_and_removes_like(self):
+        self.client.login(username='reader', password='Blog$Secret2026')
+
+        response = self.client.post(reverse('blog:toggle_like', args=[self.post.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.post.likes.filter(pk=self.reader.pk).exists())
+        self.assertContains(response, 'aria-pressed="true"')
+
+        response = self.client.post(reverse('blog:toggle_like', args=[self.post.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.post.likes.filter(pk=self.reader.pk).exists())
+        self.assertContains(response, 'aria-pressed="false"')
+
+    def test_toggle_like_rejects_drafts(self):
+        self.client.login(username='reader', password='Blog$Secret2026')
+
+        response = self.client.post(reverse('blog:toggle_like', args=[self.draft.pk]))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(self.draft.likes.filter(pk=self.reader.pk).exists())
+
+    def test_like_htmx_post_accepts_csrf_header(self):
+        client = Client(enforce_csrf_checks=True, HTTP_HOST='localhost')
+        client.login(username='reader', password='Blog$Secret2026')
+        client.get(self.post.get_absolute_url())
+        csrf_token = client.cookies['csrftoken'].value
+
+        response = client.post(
+            reverse('blog:toggle_like', args=[self.post.pk]),
+            HTTP_HX_REQUEST='true',
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.post.likes.filter(pk=self.reader.pk).exists())
+
 
 class MyPostListViewTest(TestCase):
 

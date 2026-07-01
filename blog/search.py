@@ -28,6 +28,7 @@ def published_posts_queryset():
             filter=Q(comments__is_deleted=False),
             distinct=True,
         ),
+        likes_count=Count('likes', distinct=True),
     )
 
 
@@ -71,6 +72,8 @@ def search_posts(query='', category_slug='', tag_slug='', sort=SORT_NEW, queryse
 
     if sort == SORT_RELEVANCE and query:
         return queryset.order_by('-search_rank', '-created_at')
-    if sort in {SORT_POPULAR, SORT_DISCUSSED}:
+    if sort == SORT_POPULAR:
+        return queryset.order_by('-likes_count', '-created_at')
+    if sort == SORT_DISCUSSED:
         return queryset.order_by('-comments_count', '-created_at')
     return queryset.order_by('-created_at')

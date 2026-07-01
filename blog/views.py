@@ -2,9 +2,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.forms import UserCreationForm
@@ -143,6 +145,11 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['comment_form'] = CommentForm()
         context['comments'] = self.object.comments.filter(is_deleted=False).select_related('author')
+        context['likes_count'] = self.object.likes.count()
+        context['is_liked'] = (
+            self.request.user.is_authenticated
+            and self.object.likes.filter(pk=self.request.user.pk).exists()
+        )
         related_filter = Q()
         tag_ids = list(self.object.tags.values_list('id', flat=True))
         if self.object.category_id:
@@ -292,3 +299,24 @@ class MyPostListView(LoginRequiredMixin, ListView):
         return Post.objects.filter(
             author=self.request.user,
         ).select_related('category').prefetch_related('tags').order_by('-created_at')
+
+
+@login_required
+@require_POST
+def toggle_like(request, pk):
+    post = get_object_or_404(Post, pk=pk, status=Post.Status.PUBLISHED)
+    is_liked = post.likes.filter(pk=request.user.pk).exists()
+    if is_liked:
+        post.likes.remove(request.user)
+        is_liked = False
+    else:
+        post.likes.add(request.user)
+        is_liked = True
+
+    # We return a small HTML snippet with the updated heart icon and count
+    html = render_to_string('blog/partials/like_button.html', {
+        'post': post,
+        'is_liked': is_liked,
+        'likes_count': post.likes.count(),
+    }, request=request)
+    return HttpResponse(html)

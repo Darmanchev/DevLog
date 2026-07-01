@@ -16,7 +16,7 @@
         background: transparent;
     }
 
-    .modern-input-title {
+    .portal-input-title {
         width: 100%;
         border: 2px solid #cbd5e1;
         background: #f8fafc;
@@ -31,12 +31,12 @@
         transition: border-color 0.2s, background 0.2s;
     }
     
-    .modern-input-title:focus {
+    .portal-input-title:focus {
         border-color: #6366f1;
         background: #ffffff;
     }
 
-    .modern-input-body {
+    .portal-input-body {
         width: 100%;
         border: 2px solid #cbd5e1;
         background: #f8fafc;
@@ -51,7 +51,7 @@
         transition: border-color 0.2s, background 0.2s;
     }
 
-    .modern-input-body:focus {
+    .portal-input-body:focus {
         border-color: #6366f1;
         background: #ffffff;
     }
@@ -64,7 +64,7 @@
         gap: 20px;
     }
 
-    .modern-sidebar-card {
+    .portal-sidebar-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 20px;
@@ -72,7 +72,7 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     }
     
-    .modern-sidebar-title {
+    .portal-sidebar-title {
         font-size: 12px;
         text-transform: uppercase;
         font-weight: 800;
@@ -98,7 +98,7 @@
 
         <main class="modern-editor-main">
             <label for="id_title" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Заголовок</label>
-            <textarea name="title" id="id_title" class="modern-input-title" rows="1" placeholder="Введите заголовок..." required data-autoresize>{% if form.title.value %}{{ form.title.value }}{% endif %}</textarea>
+            <textarea name="title" id="id_title" class="portal-input-title" rows="1" placeholder="Введите заголовок..." required data-autoresize>{% if form.title.value %}{{ form.title.value }}{% endif %}</textarea>
             
             {% if form.title.errors %}
                 <ul class="portal-field-errors" role="alert" style="margin-bottom: 16px;">
@@ -107,7 +107,7 @@
             {% endif %}
 
             <label for="id_body" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Текст поста</label>
-            <textarea name="body" id="id_body" class="modern-input-body" placeholder="Напишите вашу историю..." required data-autoresize>{% if form.body.value %}{{ form.body.value }}{% endif %}</textarea>
+            <textarea name="body" id="id_body" class="portal-input-body" placeholder="Напишите вашу историю..." required data-autoresize>{% if form.body.value %}{{ form.body.value }}{% endif %}</textarea>
             
             {% if form.body.errors %}
                 <ul class="portal-field-errors" role="alert">
@@ -117,8 +117,8 @@
         </main>
 
         <aside class="modern-sidebar">
-            <div class="modern-sidebar-card">
-                <div class="modern-sidebar-title">Публикация</div>
+            <div class="portal-sidebar-card">
+                <div class="portal-sidebar-title">Публикация</div>
                 
                 <div class="portal-field" style="margin-bottom: 16px;">
                     <label for="id_status" style="font-size: 13px; color: #475569;">Статус</label>
@@ -131,8 +131,8 @@
                 </button>
             </div>
             
-            <div class="modern-sidebar-card" style="background: #f8fafc;">
-                <div class="modern-sidebar-title">Совет редактора</div>
+            <div class="portal-sidebar-card" style="background: #f8fafc;">
+                <div class="portal-sidebar-title">Совет редактора</div>
                 <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0;">
                     Начните с цепляющего заголовка. Разбейте текст на абзацы для удобного чтения. 
                     Не бойтесь быть искренним — сообщество BlogPortal ценит личный опыт.

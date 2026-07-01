@@ -14,7 +14,7 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ['title', 'body', 'category', 'tags', 'status']
+        fields = ['title', 'body', 'cover_image', 'category', 'tags', 'status']
         widgets = {
             'title': forms.Textarea(attrs={
                 'class': 'portal-compose-title-input',
@@ -27,6 +27,9 @@ class PostForm(forms.ModelForm):
                 'placeholder': 'Напишите вашу историю...',
                 'rows': 16,
                 'data-autoresize': '',
+            }),
+            'cover_image': forms.ClearableFileInput(attrs={
+                'class': 'portal-file-input',
             }),
             'category': forms.Select(attrs={
                 'class': 'portal-select',

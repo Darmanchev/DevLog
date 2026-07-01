@@ -99,6 +99,16 @@ class Post(UniqueSlugMixin, models.Model):
         blank=True,
         related_name='posts',
     )
+    cover_image = models.ImageField(
+        upload_to='post_covers/',
+        blank=True,
+        null=True,
+    )
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='liked_posts',
+    )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
