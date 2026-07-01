@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load blog_extras %}
 
 {% block title %}
     {% if search_query %}Поиск "{{ search_query }}" - BlogPortal{% elif selected_category %}{{ selected_category.name }} - BlogPortal{% elif selected_tag %}#{{ selected_tag.name }} - BlogPortal{% else %}Лента сообщества - BlogPortal{% endif %}
@@ -80,24 +81,24 @@
     {% for post in posts %}
         {% if forloop.first %}
             <!-- Главный (Featured) пост -->
-            <article class="modern-featured">
-                <span class="modern-featured-badge">
+            <article class="portal-featured">
+                <span class="portal-featured-badge">
                     {% if post.category %}{{ post.category.name }}{% else %}Свежее{% endif %}
                 </span>
                 
-                <a href="{{ post.get_absolute_url }}" class="modern-featured-title">
+                <a href="{{ post.get_absolute_url }}" class="portal-featured-title">
                     {{ post.title }}
                 </a>
                 
-                <p class="modern-featured-excerpt">
+                <p class="portal-featured-excerpt">
                     {{ post.body|truncatewords:45 }}
                 </p>
                 
-                <div class="modern-meta" style="border-top: none; padding-top: 0;">
+                <div class="portal-meta" style="border-top: none; padding-top: 0;">
                     <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{post.author.username}}" alt="{{post.author.username}}" class="portal-avatar portal-avatar-sm" loading="lazy">
-                    <div class="modern-author-info">
-                        <a href="{% url 'blog:author_posts' post.author.username %}" class="modern-author-name">{{ post.author.username }}</a>
-                        <time class="modern-date" datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d E Y" }}</time>
+                    <div class="portal-author-info">
+                        <a href="{% url 'blog:author_posts' post.author.username %}" class="portal-author-name">{{ post.author.username }}</a>
+                        <time class="portal-date" datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d E Y" }} &bull; {{ post.body|read_time }} мин чтения</time>
                     </div>
                     <span class="portal-comment-count">{{ post.comments_count }} комментариев</span>
                 </div>
@@ -115,6 +116,9 @@
         {% else %}
             <!-- Карточка обычного поста -->
             <article class="portal-card">
+                {% if post.cover_image %}
+                    <img src="{{ post.cover_image.url }}" alt="Обложка" class="portal-card-cover-img" loading="lazy">
+                {% endif %}
                 <span class="portal-card-category">
                     {% if post.category %}{{ post.category.name }}{% else %}Статья{% endif %}
                 </span>
@@ -127,11 +131,11 @@
                     {{ post.body|truncatewords:20 }}
                 </p>
                 
-                <div class="modern-meta">
+                <div class="portal-meta">
                     <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{post.author.username}}" alt="{{post.author.username}}" class="portal-avatar portal-avatar-sm" loading="lazy">
-                    <div class="modern-author-info">
-                        <a href="{% url 'blog:author_posts' post.author.username %}" class="modern-author-name">{{ post.author.username }}</a>
-                        <time class="modern-date" datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d M" }}</time>
+                    <div class="portal-author-info">
+                        <a href="{% url 'blog:author_posts' post.author.username %}" class="portal-author-name">{{ post.author.username }}</a>
+                        <time class="portal-date" datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d M" }} &bull; {{ post.body|read_time }} мин</time>
                     </div>
                     <span class="portal-comment-count">{{ post.comments_count }}</span>
                 </div>

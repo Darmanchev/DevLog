@@ -4,6 +4,45 @@
     {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %} - BlogPortal
 {% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<style>
+    .editor-toolbar {
+        border: 2px solid #cbd5e1;
+        border-bottom: none;
+        border-radius: 16px 16px 0 0;
+        background: var(--portal-surface);
+    }
+    .CodeMirror {
+        border: 2px solid #cbd5e1;
+        border-radius: 0 0 16px 16px;
+        background: var(--portal-bg);
+        color: var(--portal-ink);
+        font-family: monospace;
+        font-size: 16px;
+    }
+    [data-theme="dark"] .editor-toolbar {
+        background: var(--portal-surface-soft);
+        border-color: var(--portal-line);
+    }
+    [data-theme="dark"] .editor-toolbar button {
+        color: var(--portal-ink);
+    }
+    [data-theme="dark"] .editor-toolbar button:hover {
+        background: var(--portal-surface);
+    }
+    [data-theme="dark"] .CodeMirror {
+        background: var(--portal-bg);
+        border-color: var(--portal-line);
+        color: var(--portal-ink);
+    }
+    .editor-statusbar {
+        display: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 
@@ -12,10 +51,10 @@
         <h1 id="post-form-title" style="font-size: 32px; font-weight: 900; color: var(--portal-ink);">
             {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %}
         </h1>
-        <p style="color: #64748b; font-size: 16px; margin-top: 4px;">Напишите свою историю и поделитесь ей с миром.</p>
+        <p style="color: var(--portal-muted); font-size: 16px; margin-top: 4px;">Напишите свою историю и поделитесь ей с миром.</p>
     </div>
 
-    <form method="POST" class="portal-editor-layout">
+    <form method="POST" enctype="multipart/form-data" class="portal-editor-layout">
         {% csrf_token %}
 
         <main class="portal-editor-main">
@@ -25,10 +64,10 @@
                 </div>
             {% endif %}
 
-            <label for="id_title" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Заголовок</label>
+            <label for="id_title" style="display:block; margin-bottom: 8px; font-weight: 700; color: var(--portal-muted);">Заголовок</label>
             <!-- Render original title input but override its classes using JS or we just render it with existing widgets. -->
             <!-- Actually, we can just use the widget's class and style it if we want, but it's cleaner to output manually or style the portal-compose-title-input. -->
-            <textarea name="title" id="id_title" class="modern-input-title" rows="1" placeholder="Введите заголовок..." required data-autoresize>{% if form.title.value %}{{ form.title.value }}{% endif %}</textarea>
+            <textarea name="title" id="id_title" class="portal-input-title" rows="1" placeholder="Введите заголовок..." required data-autoresize>{% if form.title.value %}{{ form.title.value }}{% endif %}</textarea>
             
             {% if form.title.errors %}
                 <ul class="portal-field-errors" role="alert" style="margin-bottom: 16px;">
@@ -36,8 +75,8 @@
                 </ul>
             {% endif %}
 
-            <label for="id_body" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Текст поста</label>
-            <textarea name="body" id="id_body" class="modern-input-body" placeholder="Напишите вашу историю..." required data-autoresize>{% if form.body.value %}{{ form.body.value }}{% endif %}</textarea>
+            <label for="id_body" style="display:block; margin-bottom: 8px; font-weight: 700; color: var(--portal-muted);">Текст поста</label>
+            <textarea name="body" id="id_body" class="portal-input-body" placeholder="Напишите вашу историю..." required data-autoresize>{% if form.body.value %}{{ form.body.value }}{% endif %}</textarea>
             
             {% if form.body.errors %}
                 <ul class="portal-field-errors" role="alert">
@@ -47,12 +86,25 @@
         </main>
 
         <aside class="portal-editor-sidebar">
+            <div class="portal-sidebar-card">
+                <div class="portal-sidebar-title">Обложка статьи</div>
+                <div class="portal-sidebar-field" style="margin-bottom: 0;">
+                    {{ form.cover_image }}
+                    {% if form.cover_image.errors %}
+                        <ul class="portal-field-errors">
+                            {% for error in form.cover_image.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Загрузите красивую картинку для привлечения внимания.</p>
+                </div>
+            </div>
+
             <!-- Блок с тегами и категорией -->
-            <div class="portal-editor-sidebar-card">
-                <div class="portal-editor-sidebar-title">Классификация</div>
-                
-                <div class="portal-editor-sidebar-field">
-                    <label for="{{ form.category.id_for_label }}" class="portal-editor-sidebar-label">Категория</label>
+            <div class="portal-sidebar-card">
+
+
+                <div class="portal-sidebar-field">
+                    <label for="{{ form.category.id_for_label }}" class="portal-sidebar-label">Категория</label>
                     {{ form.category }}
                     {% if form.category.help_text %}
                         <p class="portal-field-help">{{ form.category.help_text }}</p>
@@ -64,8 +116,8 @@
                     {% endif %}
                 </div>
 
-                <div class="portal-editor-sidebar-field">
-                    <label class="portal-editor-sidebar-label">Теги</label>
+                <div class="portal-sidebar-field">
+                    <label class="portal-sidebar-label">Теги</label>
                     <!-- Django renders checkbox list here, our new CSS handles the pill styling -->
                     {{ form.tags }}
                     {% if form.tags.help_text %}
@@ -80,15 +132,15 @@
             </div>
 
             <!-- Блок с публикацией -->
-            <div class="portal-editor-sidebar-card" style="background: #f8fafc;">
-                <div class="portal-editor-sidebar-title">Публикация</div>
-                
-                <div class="portal-editor-sidebar-field">
-                    <label for="{{ form.status.id_for_label }}" class="portal-editor-sidebar-label">Статус</label>
+            <div class="portal-sidebar-card">
+
+
+                <div class="portal-sidebar-field">
+                    <label for="{{ form.status.id_for_label }}" class="portal-sidebar-label">Статус</label>
                     {{ form.status }}
                 </div>
                 
-                <button type="submit" class="portal-button" style="width: 100%; justify-content: center; margin-bottom: 12px; padding: 14px; border-radius: 14px;">
+                <button type="submit" class="portal-button" style="width: 100%; justify-content: center; margin-top: 16px; margin-bottom: 12px; padding: 14px; border-radius: 14px;">
                     <span class="portal-button-text">{% if form.instance.pk %}Сохранить изменения{% else %}Опубликовать{% endif %}</span>
                 </button>
                 
@@ -103,9 +155,29 @@
 </section>
 
 <script>
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('id_body'),
+        spellChecker: false,
+        status: false,
+        placeholder: "Напишите вашу историю... (поддерживается Markdown)",
+        toolbar: ["bold", "italic", "heading", "|", "quote", "code", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"]
+    });
+    const postForm = document.querySelector('.portal-editor-layout');
+    const bodyField = document.getElementById('id_body');
+
+    if (bodyField) {
+        bodyField.removeAttribute('required');
+    }
+
+    if (postForm) {
+        postForm.addEventListener('submit', function() {
+            easyMDE.codemirror.save();
+        });
+    }
+
     function autoResizeTextarea(el) {
         el.style.height = 'auto';
-        el.style.height = el.scrollHeight + 'px';
+        el.style.height = (el.scrollHeight + 4) + 'px';
     }
     
     document.querySelectorAll('textarea[data-autoresize]').forEach(function(el) {

@@ -20,9 +20,9 @@
     <div class="portal-feed-stack">
         {% for post in posts %}
             <article class="portal-card">
-                <div class="modern-mypost-top">
+                <div class="portal-mypost-top">
                     <div>
-                        <div class="modern-mypost-meta" style="margin-bottom: 8px;">
+                        <div class="portal-mypost-meta" style="margin-bottom: 8px;">
                             <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"d M Y" }}</time>
                             {% if post.category %}
                                 <span>&bull;</span>
@@ -30,26 +30,26 @@
                             {% endif %}
                         </div>
                         <h2 style="margin: 0;">
-                            <a href="{{ post.get_absolute_url }}" class="modern-mypost-title">
+                            <a href="{{ post.get_absolute_url }}" class="portal-mypost-title">
                                 {{ post.title }}
                             </a>
                         </h2>
                     </div>
                     
                     {% if post.status == post.Status.PUBLISHED %}
-                        <span class="modern-status-badge status-published">Опубликован</span>
+                        <span class="portal-status-badge status-published">Опубликован</span>
                     {% else %}
-                        <span class="modern-status-badge status-draft">Черновик</span>
+                        <span class="portal-status-badge status-draft">Черновик</span>
                     {% endif %}
                 </div>
 
-                <p class="modern-mypost-excerpt">
+                <p class="portal-mypost-excerpt">
                     {{ post.body|truncatewords:40 }}
                 </p>
 
-                <div class="modern-mypost-actions">
-                    <a href="{% url 'blog:post_edit' post.slug %}" class="modern-action-btn action-edit">Редактировать</a>
-                    <a href="{% url 'blog:post_delete' post.slug %}" class="modern-action-btn action-delete">Удалить</a>
+                <div class="portal-mypost-actions">
+                    <a href="{% url 'blog:post_edit' post.slug %}" class="portal-action-btn action-edit">Редактировать</a>
+                    <a href="{% url 'blog:post_delete' post.slug %}" class="portal-action-btn action-delete">Удалить</a>
                     
                     {% if post.tags.all %}
                         <div class="portal-inline-tags" style="margin-left: auto;">

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load blog_extras %}
 
 {% block title %}{{ post.title }} - BlogPortal{% endblock %}
 {% block meta_description %}{{ post.body|striptags|truncatewords:28 }}{% endblock %}
@@ -7,6 +8,12 @@
 {% block og_title %}{{ post.title }} - BlogPortal{% endblock %}
 {% block og_description %}{{ post.body|striptags|truncatewords:28 }}{% endblock %}
 {% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+{% endblock %}
 
 {% block content %}
 <nav aria-label="Панель действий поста" class="portal-action-bar">
@@ -33,9 +40,13 @@
     <div>
         <article class="portal-article-card">
             <header class="portal-article-cover">
-                <div class="portal-article-cover-content">
+                {% if post.cover_image %}
+                    <img src="{{ post.cover_image.url }}" alt="Обложка" class="portal-post-cover" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.3;">
+                {% endif %}
+                <div class="portal-article-cover-content" style="position: relative; z-index: 1;">
                     <p class="portal-page-kicker">
-                        {% if post.category %}{{ post.category.name }}{% else %}Статья{% endif %}
+                        {% if post.category %}#{{ post.category.name }}{% else %}Статья{% endif %}
+                        &bull; {{ post.body|read_time }} мин чтения
                     </p>
                     <h1 class="portal-article-title">{{ post.title }}</h1>
                 </div>
@@ -60,8 +71,11 @@
                     </div>
                 {% endif %}
 
-                <div class="portal-prose">
-                    {{ post.body|linebreaks }}
+                <div class="portal-prose markdown-content">
+                    {{ post.body|markdown }}
+                </div>
+                <div style="margin-top: 32px;">
+                    {% include 'blog/partials/like_button.html' %}
                 </div>
             </div>
         </article>

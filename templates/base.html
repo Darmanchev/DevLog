@@ -12,8 +12,15 @@
     <meta property="og:description" content="{% block og_description %}Свежие публикации, опыт и обсуждения сообщества BlogPortal.{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-    <link rel="stylesheet" href="{% static 'css/portal.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/portal.css' %}?v=5">
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script>
+        // Init Dark Mode before body renders to prevent flash
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="portal-body antialiased">
@@ -123,6 +130,12 @@
                 </form>
 
                 <div class="portal-top-actions">
+                    <button class="portal-theme-toggle" onclick="toggleTheme()" aria-label="Переключить тему" title="Тёмная/Светлая тема">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="theme-icon-moon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+
                     <button class="portal-icon-button" type="button" aria-label="Уведомления" title="Уведомления">
                         <span class="portal-notification-dot" aria-hidden="true"></span>
                         <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -163,6 +176,33 @@
     </div>
 
     <script>
+        function getCookie(name) {
+            const prefix = `${name}=`;
+            return document.cookie
+                .split(';')
+                .map((cookie) => cookie.trim())
+                .find((cookie) => cookie.startsWith(prefix))
+                ?.slice(prefix.length) || '';
+        }
+
+        document.body.addEventListener('htmx:configRequest', function (event) {
+            const csrfToken = getCookie('csrftoken');
+            if (csrfToken) {
+                event.detail.headers['X-CSRFToken'] = csrfToken;
+            }
+        });
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
         function resizeTextarea(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = `${textarea.scrollHeight}px`;
