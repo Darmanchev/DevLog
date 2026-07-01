@@ -1,98 +1,118 @@
 {% extends 'base.html' %}
 
-{% block title %}Новый пост - Мой Блог{% endblock %}
+{% block title %}
+    {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %} - BlogPortal
+{% endblock %}
 
 {% block content %}
-<section aria-labelledby="create-post-title" class="max-w-3xl mx-auto py-8">
-    
-    <!-- Шапка страницы -->
-    <header class="mb-8 border-b border-gray-200 pb-4">
-        <h1 id="create-post-title" class="text-3xl font-extrabold text-gray-900">
-            Написать новый пост
+
+
+<section aria-labelledby="post-form-title">
+    <div style="margin-bottom: 32px;">
+        <h1 id="post-form-title" style="font-size: 32px; font-weight: 900; color: var(--portal-ink);">
+            {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %}
         </h1>
-        <p class="mt-2 text-sm text-gray-500">
-            Поделитесь своими мыслями с миром. Заполните форму ниже.
-        </p>
-    </header>
+        <p style="color: #64748b; font-size: 16px; margin-top: 4px;">Напишите свою историю и поделитесь ей с миром.</p>
+    </div>
 
-    <!-- Контейнер формы -->
-    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
-        <form method="POST" class="space-y-6">
-            {% csrf_token %}
+    <form method="POST" class="portal-editor-layout">
+        {% csrf_token %}
 
+        <main class="portal-editor-main">
             {% if form.errors %}
-            <div role="alert" class="rounded-md bg-red-50 p-4 mb-6 border border-red-200 text-sm text-red-800">
-                <div class="flex">
-                    <svg aria-hidden="true" class="h-5 w-5 text-red-400 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                    Пожалуйста, проверьте правильность заполнения полей.
+                <div role="alert" style="background: #fef2f2; border: 2px solid #fecaca; color: #ef4444; padding: 16px; border-radius: 12px; font-weight: 700; margin-bottom: 24px;">
+                    Пожалуйста, проверьте правильность заполнения полей справа или ниже.
                 </div>
-            </div>
             {% endif %}
 
-            <!-- Цикл по полям формы -->
-            {% for field in form %}
-            <div>
-                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">
-                    {{ field.label }}
-                </label>
+            <label for="id_title" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Заголовок</label>
+            <!-- Render original title input but override its classes using JS or we just render it with existing widgets. -->
+            <!-- Actually, we can just use the widget's class and style it if we want, but it's cleaner to output manually or style the portal-compose-title-input. -->
+            <textarea name="title" id="id_title" class="modern-input-title" rows="1" placeholder="Введите заголовок..." required data-autoresize>{% if form.title.value %}{{ form.title.value }}{% endif %}</textarea>
+            
+            {% if form.title.errors %}
+                <ul class="portal-field-errors" role="alert" style="margin-bottom: 16px;">
+                    {% for error in form.title.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+
+            <label for="id_body" style="display:block; margin-bottom: 8px; font-weight: 700; color: #475569;">Текст поста</label>
+            <textarea name="body" id="id_body" class="modern-input-body" placeholder="Напишите вашу историю..." required data-autoresize>{% if form.body.value %}{{ form.body.value }}{% endif %}</textarea>
+            
+            {% if form.body.errors %}
+                <ul class="portal-field-errors" role="alert">
+                    {% for error in form.body.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </main>
+
+        <aside class="portal-editor-sidebar">
+            <!-- Блок с тегами и категорией -->
+            <div class="portal-editor-sidebar-card">
+                <div class="portal-editor-sidebar-title">Классификация</div>
                 
-                <div class="relative">
-                    <!-- Стилизация стандартных полей Django "на лету" -->
-                    <style>
-                        #{{ field.id_for_label }} {
-                            appearance: none;
-                            display: block;
-                            width: 100%;
-                            padding: 0.75rem 1rem;
-                            border: 1px solid #d1d5db; /* gray-300 */
-                            border-radius: 0.5rem; /* rounded-lg */
-                            background-color: #f9fafb; /* gray-50 */
-                            color: #111827; /* gray-900 */
-                            font-size: 1rem;
-                            transition: all 0.2s;
-                        }
-                        #{{ field.id_for_label }}:focus {
-                            outline: none;
-                            border-color: #3b82f6; /* blue-500 */
-                            background-color: #ffffff;
-                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-                        }
-                        /* Делаем текстовое поле (body) побольше */
-                        textarea#id_body {
-                            min-height: 250px;
-                            resize: vertical;
-                        }
-                    </style>
-                    
-                    {{ field }}
+                <div class="portal-editor-sidebar-field">
+                    <label for="{{ form.category.id_for_label }}" class="portal-editor-sidebar-label">Категория</label>
+                    {{ form.category }}
+                    {% if form.category.help_text %}
+                        <p class="portal-field-help">{{ form.category.help_text }}</p>
+                    {% endif %}
+                    {% if form.category.errors %}
+                        <ul class="portal-field-errors">
+                            {% for error in form.category.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="portal-editor-sidebar-field">
+                    <label class="portal-editor-sidebar-label">Теги</label>
+                    <!-- Django renders checkbox list here, our new CSS handles the pill styling -->
+                    {{ form.tags }}
+                    {% if form.tags.help_text %}
+                        <p class="portal-field-help">{{ form.tags.help_text }}</p>
+                    {% endif %}
+                    {% if form.tags.errors %}
+                        <ul class="portal-field-errors">
+                            {% for error in form.tags.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Блок с публикацией -->
+            <div class="portal-editor-sidebar-card" style="background: #f8fafc;">
+                <div class="portal-editor-sidebar-title">Публикация</div>
+                
+                <div class="portal-editor-sidebar-field">
+                    <label for="{{ form.status.id_for_label }}" class="portal-editor-sidebar-label">Статус</label>
+                    {{ form.status }}
                 </div>
                 
-                {% if field.help_text %}
-                <p class="mt-2 text-sm text-gray-500">{{ field.help_text|safe }}</p>
-                {% endif %}
-                
-                {% if field.errors %}
-                <ul class="mt-2 text-sm text-red-600 font-medium list-disc list-inside">
-                    {% for error in field.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            {% endfor %}
-
-            <!-- Кнопки действий -->
-            <div class="pt-6 border-t border-gray-200 flex justify-end gap-4 mt-8">
-                <a href="{% url 'blog:post_list' %}" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    Отмена
-                </a>
-                <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    Сохранить пост
+                <button type="submit" class="portal-button" style="width: 100%; justify-content: center; margin-bottom: 12px; padding: 14px; border-radius: 14px;">
+                    <span class="portal-button-text">{% if form.instance.pk %}Сохранить изменения{% else %}Опубликовать{% endif %}</span>
                 </button>
+                
+                {% if form.instance.pk %}
+                    <a href="{{ form.instance.get_absolute_url }}" class="portal-button portal-button-soft" style="width: 100%; justify-content: center; padding: 14px; border-radius: 14px;">Отмена</a>
+                {% else %}
+                    <a href="{% url 'blog:post_list' %}" class="portal-button portal-button-soft" style="width: 100%; justify-content: center; padding: 14px; border-radius: 14px;">Отмена</a>
+                {% endif %}
             </div>
-        </form>
-    </div>
+        </aside>
+    </form>
 </section>
+
+<script>
+    function autoResizeTextarea(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+    
+    document.querySelectorAll('textarea[data-autoresize]').forEach(function(el) {
+        el.addEventListener('input', function() {
+            autoResizeTextarea(el);
+        });
+        autoResizeTextarea(el);
+    });
+</script>
 {% endblock %}

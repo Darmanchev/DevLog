@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from .models import Comment, Post
+from .forms import PostForm
+from .models import Category, Comment, Post, Tag, UserProfile
 
 User = get_user_model()
 
@@ -94,6 +95,212 @@ class PostViewTest(TestCase):
         self.client.login(username='tester', password='pass12345')
         response = self.client.get(reverse('blog:post_detail', args=['draft']))
         self.assertEqual(response.status_code, 200)
+
+    def test_list_can_filter_by_category(self):
+        django = Category.objects.create(name='Django')
+        python = Category.objects.create(name='Python')
+        self.published.category = django
+        self.published.save(update_fields=['category'])
+        Post.objects.create(
+            title='Python пост',
+            slug='python-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+            category=python,
+        )
+
+        response = self.client.get(reverse('blog:post_list'), {'category': django.slug})
+
+        self.assertContains(response, 'Опубликованный')
+        self.assertNotContains(response, 'Python пост')
+
+    def test_category_page_uses_pretty_url(self):
+        django = Category.objects.create(name='Django')
+        python = Category.objects.create(name='Python')
+        self.published.category = django
+        self.published.save(update_fields=['category'])
+        Post.objects.create(
+            title='Python пост',
+            slug='python-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+            category=python,
+        )
+
+        response = self.client.get(reverse('blog:category_posts', args=[django.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Опубликованный')
+        self.assertNotContains(response, 'Python пост')
+
+    def test_list_can_filter_by_tag(self):
+        htmx = Tag.objects.create(name='HTMX')
+        ui = Tag.objects.create(name='UI')
+        self.published.tags.add(htmx)
+        other = Post.objects.create(
+            title='UI пост',
+            slug='ui-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        other.tags.add(ui)
+
+        response = self.client.get(reverse('blog:post_list'), {'tag': htmx.slug})
+
+        self.assertContains(response, 'Опубликованный')
+        self.assertNotContains(response, 'UI пост')
+
+    def test_tag_page_uses_pretty_url(self):
+        htmx = Tag.objects.create(name='HTMX')
+        ui = Tag.objects.create(name='UI')
+        self.published.tags.add(htmx)
+        other = Post.objects.create(
+            title='UI пост',
+            slug='ui-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        other.tags.add(ui)
+
+        response = self.client.get(reverse('blog:tag_posts', args=[htmx.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Опубликованный')
+        self.assertNotContains(response, 'UI пост')
+
+    def test_create_post_saves_category_and_tags(self):
+        category = Category.objects.create(name='Django')
+        tag = Tag.objects.create(name='Forms')
+        self.client.login(username='tester', password='pass12345')
+
+        response = self.client.post(reverse('blog:post_create'), {
+            'title': 'Пост с метками',
+            'body': 'текст',
+            'category': category.pk,
+            'tags': [tag.pk],
+            'status': Post.Status.PUBLISHED,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        post = Post.objects.get(title='Пост с метками')
+        self.assertEqual(post.category, category)
+        self.assertIn(tag, post.tags.all())
+
+    def test_post_form_rejects_more_than_five_tags(self):
+        tags = [
+            Tag.objects.create(name=f'Tag {number}')
+            for number in range(6)
+        ]
+
+        form = PostForm(data={
+            'title': 'Пост с лишними тегами',
+            'body': 'текст',
+            'tags': [tag.pk for tag in tags],
+            'status': Post.Status.PUBLISHED,
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('tags', form.errors)
+
+    def test_detail_shows_related_posts_by_category_or_tag(self):
+        category = Category.objects.create(name='Django')
+        tag = Tag.objects.create(name='Forms')
+        self.published.category = category
+        self.published.save(update_fields=['category'])
+        self.published.tags.add(tag)
+        by_category = Post.objects.create(
+            title='Похожий по категории',
+            slug='related-category',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+            category=category,
+        )
+        by_tag = Post.objects.create(
+            title='Похожий по тегу',
+            slug='related-tag',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        by_tag.tags.add(tag)
+        Post.objects.create(
+            title='Не похожий',
+            slug='not-related',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+
+        response = self.client.get(self.published.get_absolute_url())
+
+        related_posts = list(response.context['related_posts'])
+        self.assertIn(by_category, related_posts)
+        self.assertIn(by_tag, related_posts)
+        self.assertNotContains(response, 'Не похожий')
+
+    def test_list_is_paginated(self):
+        for number in range(7):
+            Post.objects.create(
+                title=f'Пост {number}',
+                slug=f'post-{number}',
+                author=self.user,
+                body='текст',
+                status=Post.Status.PUBLISHED,
+            )
+
+        response = self.client.get(reverse('blog:post_list'))
+
+        self.assertTrue(response.context['is_paginated'])
+        self.assertContains(response, 'page=2')
+
+    def test_list_can_sort_by_discussed(self):
+        quiet = Post.objects.create(
+            title='Тихий пост',
+            slug='quiet-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        discussed = Post.objects.create(
+            title='Обсуждаемый пост',
+            slug='discussed-post',
+            author=self.user,
+            body='текст',
+            status=Post.Status.PUBLISHED,
+        )
+        Comment.objects.create(post=discussed, author=self.user, body='Комментарий')
+
+        response = self.client.get(reverse('blog:post_list'), {'sort': 'discussed'})
+
+        posts = list(response.context['posts'])
+        self.assertEqual(posts[0], discussed)
+        self.assertIn(quiet, posts)
+
+    def test_list_shows_active_search_filter(self):
+        response = self.client.get(reverse('blog:post_list'), {'q': 'Опубликованный'})
+
+        self.assertContains(response, 'Поиск: Опубликованный')
+        self.assertContains(response, '1 публикаций')
+
+    def test_author_page_shows_profile_and_posts(self):
+        UserProfile.objects.create(user=self.user, bio='Пишу про Django.')
+
+        response = self.client.get(reverse('blog:author_posts', args=[self.user.username]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Пишу про Django.')
+        self.assertContains(response, 'Опубликованный')
+        self.assertNotContains(response, 'Черновик')
+
+    def test_detail_has_open_graph_meta(self):
+        response = self.client.get(self.published.get_absolute_url())
+
+        self.assertContains(response, 'property="og:type" content="article"')
 
 
 class AuthTest(TestCase):

@@ -1,89 +1,148 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ post.title }} - Мой Блог{% endblock %}
+{% block title %}{{ post.title }} - BlogPortal{% endblock %}
+{% block meta_description %}{{ post.body|striptags|truncatewords:28 }}{% endblock %}
+{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ post.title }} - BlogPortal{% endblock %}
+{% block og_description %}{{ post.body|striptags|truncatewords:28 }}{% endblock %}
+{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
 
 {% block content %}
-    <nav aria-label="Панель действий поста" class="flex justify-between items-center mb-8">
-        <a href="{% url 'blog:post_list' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
-            <svg aria-hidden="true" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            К списку статей
-        </a>
+<nav aria-label="Панель действий поста" class="portal-action-bar">
+    <a href="{% url 'blog:post_list' %}" class="portal-link">
+        <span aria-hidden="true">←</span>
+        <span>К списку статей</span>
+    </a>
 
-        <!-- Кнопки редактирования и удаления только для автора поста -->
-        {% if user == post.author %}
-        <div class="flex items-center gap-3">
-            <a href="{% url 'blog:post_edit' post.slug %}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm transition-colors">
-                <svg aria-hidden="true" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                Редактировать
+    {% if user == post.author %}
+        <div class="portal-action-group">
+            <a href="{% url 'blog:post_edit' post.slug %}" class="portal-button portal-button-soft">
+                <span aria-hidden="true">✎</span>
+                <span>Редактировать</span>
             </a>
-            <a href="{% url 'blog:post_delete' post.slug %}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 hover:border-red-300 shadow-sm transition-colors">
-                <svg aria-hidden="true" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                Удалить
+            <a href="{% url 'blog:post_delete' post.slug %}" class="portal-button portal-button-danger">
+                <span aria-hidden="true">×</span>
+                <span>Удалить</span>
             </a>
         </div>
-        {% endif %}
-    </nav>
+    {% endif %}
+</nav>
 
-    <!-- Основная статья -->
-    <article class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-200">
-        
-        <!-- Шапка статьи (заголовок, автор, дата) -->
-        <header class="mb-8 pb-8 border-b border-gray-200">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-6">
-                {{ post.title }}
-            </h1>
-            
-            <!-- Семантичный тег address для контактной/авторской информации -->
-            <address class="flex items-center gap-3 text-gray-500 not-italic">
-                <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg" aria-hidden="true">
-                    {{ post.author.username.0|upper }}
+<div class="portal-detail-layout">
+    <div>
+        <article class="portal-article-card">
+            <header class="portal-article-cover">
+                <div class="portal-article-cover-content">
+                    <p class="portal-page-kicker">
+                        {% if post.category %}{{ post.category.name }}{% else %}Статья{% endif %}
+                    </p>
+                    <h1 class="portal-article-title">{{ post.title }}</h1>
                 </div>
-                <div class="flex flex-col">
-                    <span class="font-semibold text-gray-900">
+            </header>
+
+            <div class="portal-article-body">
+                <address class="portal-meta portal-article-meta not-italic">
+                    <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{post.author.username}}" alt="{{post.author.username}}" class="portal-avatar" loading="lazy">
+                    <a href="{% url 'blog:author_posts' post.author.username %}">
                         <span class="sr-only">Автор:</span> {{ post.author.username }}
-                    </span>
-                    <!-- Тег time с атрибутом datetime в стандарте ISO 8601 -->
-                    <time datetime="{{ post.created_at|date:'c' }}" class="text-sm">
+                    </a>
+                    <time datetime="{{ post.created_at|date:'c' }}">
                         {{ post.created_at|date:"j E Y г." }}
                     </time>
+                </address>
+
+                {% if post.tags.all %}
+                    <div class="portal-inline-tags portal-article-tags" aria-label="Теги поста">
+                        {% for tag in post.tags.all %}
+                            <a href="{{ tag.get_absolute_url }}" class="portal-inline-tag">#{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="portal-prose">
+                    {{ post.body|linebreaks }}
                 </div>
-            </address>
-        </header>
-
-        <!-- Тело статьи -->
-        <div class="text-lg text-gray-700 leading-relaxed space-y-6">
-            {{ post.body|linebreaks }}
-        </div>
-    </article>
-
-    <!-- Секция комментариев -->
-    <section aria-labelledby="comments-title" class="mt-16 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-200">
-        <header class="mb-8 border-b border-gray-200 pb-4">
-            <h2 id="comments-title" class="text-2xl font-bold text-gray-900">
-                Комментарии (<span id="comments-count">{{ comments|length }}</span>)
-            </h2>
-        </header>
-
-        <!-- Список существующих комментариев -->
-        <div id="comments-list" class="space-y-8 mb-10">
-            {% for comment in comments %}
-                {% include 'blog/partials/comment.html' %}
-            {% empty %}
-                <p id="comments-empty" class="text-gray-500 italic">Пока нет ни одного комментария. Будьте первым!</p>
-            {% endfor %}
-        </div>
-
-        <!-- Форма добавления комментария -->
-        {% if user.is_authenticated %}
-            {% include 'blog/partials/comment_form.html' %}
-        {% else %}
-            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                <p class="text-gray-600">
-                    Пожалуйста, <a href="{% url 'login' %}?next={{ request.path }}" class="text-blue-600 hover:underline font-medium transition-colors">войдите</a> или <a href="{% url 'blog:signup' %}?next={{ request.path }}" class="text-blue-600 hover:underline font-medium transition-colors">зарегистрируйтесь</a>, чтобы оставить комментарий.
-                </p>
             </div>
+        </article>
+
+        <section aria-labelledby="comments-title" class="portal-comments-panel">
+            <header class="portal-comments-head">
+                <h2 id="comments-title">
+                    Комментарии <span class="portal-chip portal-chip-soft" id="comments-count">{{ comments|length }}</span>
+                </h2>
+            </header>
+
+            <div class="portal-comments-body">
+                <div id="comments-list" class="portal-comments-list">
+                    {% for comment in comments %}
+                        {% include 'blog/partials/comment.html' %}
+                    {% empty %}
+                        <p id="comments-empty" class="portal-empty-state">Пока нет ни одного комментария. Будьте первым!</p>
+                    {% endfor %}
+                </div>
+
+                {% if user.is_authenticated %}
+                    {% include 'blog/partials/comment_form.html' %}
+                {% else %}
+                    <div class="portal-auth-callout">
+                        <p>
+                            Пожалуйста, <a href="{% url 'login' %}?next={{ request.path }}">войдите</a> или <a href="{% url 'blog:signup' %}?next={{ request.path }}">зарегистрируйтесь</a>, чтобы оставить комментарий.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <aside aria-label="Информация о публикации">
+        <section class="portal-panel">
+            <h2 class="portal-panel-title">Автор</h2>
+            <div class="portal-author-card">
+                <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{post.author.username}}" alt="{{post.author.username}}" class="portal-avatar" loading="lazy">
+                <div>
+                    <a href="{% url 'blog:author_posts' post.author.username %}"><strong>{{ post.author.username }}</strong></a>
+                    <span>Автор публикации</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="portal-panel">
+            <h2 class="portal-panel-title">Детали</h2>
+            {% if post.category %}
+                <div class="portal-meta">
+                    <span>Категория</span>
+                    <a href="{{ post.category.get_absolute_url }}" class="portal-chip portal-chip-soft">{{ post.category.name }}</a>
+                </div>
+            {% endif %}
+            <div class="portal-meta">
+                <span>Опубликовано</span>
+                <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y" }}</time>
+            </div>
+            <div class="portal-meta" style="margin-top: 10px;">
+                <span>Обновлено</span>
+                <time datetime="{{ post.updated_at|date:'c' }}">{{ post.updated_at|date:"d.m.Y" }}</time>
+            </div>
+        </section>
+
+        {% if related_posts %}
+            <section class="portal-panel">
+                <h2 class="portal-panel-title">Похожие статьи</h2>
+                <div class="portal-related-list">
+                    {% for related_post in related_posts %}
+                        <article class="portal-related-item">
+                            <span class="portal-related-kicker">
+                                {% if related_post.category %}{{ related_post.category.name }}{% else %}Статья{% endif %}
+                            </span>
+                            <a href="{{ related_post.get_absolute_url }}">{{ related_post.title }}</a>
+                            <time datetime="{{ related_post.created_at|date:'c' }}">
+                                {{ related_post.created_at|date:"d.m.Y" }}
+                            </time>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-    </section>
+    </aside>
+</div>
 {% endblock content %}

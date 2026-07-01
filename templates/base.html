@@ -4,9 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Мой Блог{% endblock %}</title>
+    <title>{% block title %}BlogPortal{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}BlogPortal — сообщество авторов, статей и практических заметок о разработке.{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}BlogPortal{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Свежие публикации, опыт и обсуждения сообщества BlogPortal.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-    <link rel="stylesheet" href="{% static 'css/portal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/portal.css' %}?v=3">
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     {% block extra_head %}{% endblock %}
 </head>
@@ -62,26 +68,36 @@
 
                     <p class="portal-nav-label">Категории</p>
                     <div class="portal-tag-cloud" aria-label="Категории блога">
-                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Python</a>
-                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Django</a>
-                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># AI</a>
-                        <a href="{% url 'blog:post_list' %}" class="portal-tag"># Frontend</a>
+                        {% for category in nav_categories %}
+                            <a href="{{ category.get_absolute_url }}" class="portal-tag"># {{ category.name }} <span>{{ category.posts_count }}</span></a>
+                        {% empty %}
+                            <span class="portal-tag"># Без категорий</span>
+                        {% endfor %}
                     </div>
+
+                    {% if nav_tags %}
+                        <p class="portal-nav-label">Теги</p>
+                        <div class="portal-tag-cloud" aria-label="Теги блога">
+                            {% for tag in nav_tags %}
+                                <a href="{{ tag.get_absolute_url }}" class="portal-tag"># {{ tag.name }} <span>{{ tag.posts_count }}</span></a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </nav>
             </div>
 
             <div class="portal-side-profile">
                 {% if user.is_authenticated %}
-                    <div class="portal-profile-card">
-                        <span class="portal-avatar" aria-hidden="true">{{ user.username.0|upper }}</span>
+                    <a href="{% url 'blog:author_posts' user.username %}" class="portal-profile-card">
+                        <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{user.username}}" alt="{{user.username}}" class="portal-avatar" loading="lazy">
                         <div class="portal-profile-meta">
                             <strong>{{ user.username }}</strong>
                             <span>Автор блога</span>
                         </div>
-                    </div>
+                    </a>
                 {% else %}
                     <a href="{% url 'login' %}" class="portal-profile-card">
-                        <span class="portal-avatar" aria-hidden="true">?</span>
+                        <img src="https://api.dicebear.com/9.x/shapes/svg?seed=Guest" alt="Guest" class="portal-avatar" loading="lazy">
                         <div class="portal-profile-meta">
                             <strong>Гость</strong>
                             <span>Войдите в аккаунт</span>
@@ -141,9 +157,6 @@
                     {% block content %}
                     {% endblock content %}
 
-                    <footer class="portal-footer">
-                        <p>&copy; <time datetime="{% now 'Y' %}">{% now "Y" %}</time> Мой Блог. Все права защищены.</p>
-                    </footer>
                 </div>
             </main>
         </div>

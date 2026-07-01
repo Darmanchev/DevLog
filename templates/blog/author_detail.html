@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }} - BlogPortal{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+{% block og_title %}{{ profile_user.username }} - BlogPortal{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<section aria-labelledby="author-title">
+    <header class="portal-author-hero">
+        <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ profile_user.username }}" alt="{{ profile_user.username }}" class="portal-avatar portal-avatar-lg" loading="lazy" style="object-fit: cover; background: #ffffff;">
+        <div>
+            <p class="portal-page-kicker">Автор</p>
+            <h1 id="author-title" class="portal-author-hero-title">{{ profile_user.username }}</h1>
+            {% if author_profile and author_profile.bio %}
+                <p class="portal-author-bio">{{ author_profile.bio }}</p>
+            {% else %}
+                <p class="portal-author-bio">Автор BlogPortal. Делится заметками, опытом и практическими наблюдениями.</p>
+            {% endif %}
+            <div class="portal-author-stats">
+                <span>{{ author_posts_count }} публикаций</span>
+                <span>{{ author_comments_count }} комментариев</span>
+                <span>С нами с {{ profile_user.date_joined|date:"d.m.Y" }}</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="portal-section-row">
+        <h2 class="portal-section-title">Публикации автора</h2>
+        <nav class="portal-sort-bar" aria-label="Сортировка публикаций автора">
+            {% for option in sort_options %}
+                <a href="{{ option.url }}" class="portal-sort-link{% if option.is_active %} is-active{% endif %}">
+                    {{ option.label }}
+                </a>
+            {% endfor %}
+        </nav>
+    </div>
+
+    {% if search_query %}
+        <div class="portal-active-filters" aria-label="Активные фильтры">
+            <span class="portal-filter-chip">Поиск: {{ search_query }}</span>
+            <a href="{% url 'blog:author_posts' profile_user.username %}" class="portal-filter-reset">Сбросить</a>
+        </div>
+    {% endif %}
+
+    <div class="portal-author-grid">
+        {% for post in posts %}
+            <article class="portal-author-post-card">
+                <span class="portal-related-kicker">
+                    {% if post.category %}{{ post.category.name }}{% else %}Статья{% endif %}
+                </span>
+                <a href="{{ post.get_absolute_url }}" class="portal-author-post-title">{{ post.title }}</a>
+                <p>{{ post.body|truncatewords:24 }}</p>
+                <footer>
+                    <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y" }}</time>
+                    <span>{{ post.comments_count }} комментариев</span>
+                </footer>
+            </article>
+        {% empty %}
+            <div class="modern-empty">
+                <h2>Публикаций пока нет</h2>
+                <p>У этого автора ещё нет опубликованных статей.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="portal-pagination" aria-label="Пагинация публикаций автора">
+            {% if page_obj.has_previous %}
+                <a href="{% querystring page=page_obj.previous_page_number %}" class="portal-page-link">← Назад</a>
+            {% else %}
+                <span class="portal-page-link is-disabled">← Назад</span>
+            {% endif %}
+
+            <div class="portal-page-numbers">
+                {% for page_number in paginator.page_range %}
+                    {% if page_number == page_obj.number %}
+                        <span class="portal-page-number is-active">{{ page_number }}</span>
+                    {% else %}
+                        <a href="{% querystring page=page_number %}" class="portal-page-number">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if page_obj.has_next %}
+                <a href="{% querystring page=page_obj.next_page_number %}" class="portal-page-link">Вперёд →</a>
+            {% else %}
+                <span class="portal-page-link is-disabled">Вперёд →</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endblock content %}

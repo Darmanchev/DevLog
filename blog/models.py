@@ -3,8 +3,78 @@ from django.conf import settings
 from django.urls import reverse
 from slugify import slugify
 
-# Create your models here.
-class Post(models.Model):
+
+class UniqueSlugMixin(models.Model):
+    # This mixin automatically generates a unique slug based on the slug_source_field.
+    slug_source_field = 'name'  # Default source field
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            source_text = getattr(self, self.slug_source_field)
+            base = slugify(source_text)
+            slug = base
+            counter = 2
+            ModelClass = self.__class__
+            while ModelClass.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='profile',
+    )
+    bio = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Profile: {self.user}'
+
+
+class Category(UniqueSlugMixin, models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    
+    slug_source_field = 'name'
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'category'
+        verbose_name_plural = 'categories'
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('blog:category_posts', args=[self.slug])
+
+
+class Tag(UniqueSlugMixin, models.Model):
+    name = models.CharField(max_length=40, unique=True)
+    slug = models.SlugField(max_length=60, unique=True)
+    
+    slug_source_field = 'name'
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('blog:tag_posts', args=[self.slug])
+
+
+class Post(UniqueSlugMixin, models.Model):
     class Status(models.TextChoices):
         DRAFT = 'draft', 'Черновик'
         PUBLISHED = 'published', 'Опубликован'
@@ -17,6 +87,18 @@ class Post(models.Model):
         related_name="posts",
     )
     body = models.TextField()
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='posts',
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        related_name='posts',
+    )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
@@ -25,19 +107,10 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    slug_source_field = 'title'
+
     def get_absolute_url(self):
         return reverse('blog:post_detail', args=[self.slug])
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            base = slugify(self.title)
-            slug = base
-            counter = 2
-            while Post.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                slug = f"{base}-{counter}"
-                counter += 1
-            self.slug = slug
-        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created_at']
