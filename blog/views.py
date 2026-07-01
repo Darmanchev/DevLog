@@ -184,6 +184,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     form_class = PostForm
     template_name = 'blog/post_form.html'
 
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.setdefault('status', Post.Status.PUBLISHED)
+        return initial
+
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)

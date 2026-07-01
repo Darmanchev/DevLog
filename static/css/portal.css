@@ -2260,8 +2260,48 @@ input[type="email"]:focus {
     margin-bottom: 1.5em;
     padding-left: 24px;
 }
+.markdown-content ul {
+    list-style: disc;
+}
+.markdown-content ol {
+    list-style: decimal;
+}
 .markdown-content li {
     margin-bottom: 8px;
+}
+.markdown-content table {
+    width: 100%;
+    border: 1px solid var(--portal-line);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    margin: 24px 0;
+    overflow: hidden;
+    font-size: 16px;
+    line-height: 1.5;
+}
+.markdown-content th,
+.markdown-content td {
+    border-bottom: 1px solid var(--portal-line);
+    border-right: 1px solid var(--portal-line);
+    padding: 12px 16px;
+    text-align: left;
+    vertical-align: top;
+}
+.markdown-content th {
+    background: var(--portal-surface-soft);
+    color: var(--portal-ink);
+    font-weight: 800;
+}
+.markdown-content td {
+    color: var(--portal-ink);
+}
+.markdown-content tr:last-child td {
+    border-bottom: none;
+}
+.markdown-content th:last-child,
+.markdown-content td:last-child {
+    border-right: none;
 }
 .markdown-content img {
     max-width: 100%;

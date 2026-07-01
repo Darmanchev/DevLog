@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from .forms import PostForm
 from .models import Category, Comment, Post, Tag, UserProfile
-from .templatetags.blog_extras import markdown_format, read_time
+from .templatetags.blog_extras import markdown_format, markdown_plain_text, read_time
 
 User = get_user_model()
 
@@ -191,6 +191,17 @@ class PostViewTest(TestCase):
         self.assertEqual(post.category, category)
         self.assertIn(tag, post.tags.all())
 
+    def test_create_form_defaults_to_published_status(self):
+        self.client.login(username='tester', password='pass12345')
+
+        response = self.client.get(reverse('blog:post_create'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['form'].initial['status'],
+            Post.Status.PUBLISHED,
+        )
+
     def test_post_form_rejects_more_than_five_tags(self):
         tags = [
             Tag.objects.create(name=f'Tag {number}')
@@ -362,6 +373,30 @@ class TemplateFilterTest(TestCase):
         self.assertNotIn('<script>', html)
         self.assertIn('&lt;script&gt;', html)
         self.assertIn('<strong>жирный</strong>', html)
+
+    def test_markdown_renders_tables(self):
+        html = markdown_format(
+            '| Название | Статус |\n'
+            '| --- | --- |\n'
+            '| Django формы | Опубликован |'
+        )
+
+        self.assertIn('<table>', html)
+        self.assertIn('<th>Название</th>', html)
+        self.assertIn('<td>Опубликован</td>', html)
+
+    def test_markdown_renders_fenced_code_without_html_entities(self):
+        html = markdown_format('```python\nprint("hello")\n```')
+
+        self.assertIn('<pre><code class="language-python">', html)
+        self.assertIn('print(&quot;hello&quot;)', html)
+        self.assertNotIn('&amp;quot;', html)
+
+    def test_markdown_plain_text_unescapes_entities(self):
+        text = markdown_plain_text('```python\nprint("hello")\n```')
+
+        self.assertIn('print("hello")', text)
+        self.assertNotIn('&quot;', text)
 
 
 class PostSlugTest(TestCase):
