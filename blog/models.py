@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from slugify import slugify
+from PIL import Image
 
 
 class UniqueSlugMixin(models.Model):
@@ -121,6 +122,18 @@ class Post(UniqueSlugMixin, models.Model):
 
     def get_absolute_url(self):
         return reverse('blog:post_detail', args=[self.slug])
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.cover_image:
+            try:
+                img = Image.open(self.cover_image.path)
+                if img.height > 1080 or img.width > 1920:
+                    output_size = (1920, 1080)
+                    img.thumbnail(output_size, Image.Resampling.LANCZOS)
+                    img.save(self.cover_image.path, optimize=True, quality=85)
+            except Exception:
+                pass
 
     class Meta:
         ordering = ['-created_at']

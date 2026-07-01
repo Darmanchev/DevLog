@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена - BlogPortal{% endblock %}
+
+{% block content %}
+<div class="portal-empty-card" style="margin-top: 10vh; max-width: 600px; margin-left: auto; margin-right: auto; padding: 100px 40px;">
+    <h1 style="font-size: 64px; font-weight: 900; color: var(--portal-ink); line-height: 1; margin-bottom: 16px;">404</h1>
+    <h2 style="font-size: 24px; font-weight: 800; color: var(--portal-ink); margin-bottom: 16px;">Упс... Страница не найдена</h2>
+    <p style="font-size: 16px; color: var(--portal-muted); margin-bottom: 32px; line-height: 1.6;">Возможно, статья была удалена, либо вы опечатались в ссылке. Не переживайте, у нас еще много интересного!</p>
+    <a href="{% url 'blog:post_list' %}" class="portal-button" style="display: inline-flex; justify-content: center; padding: 14px 24px; border-radius: 12px;">Вернуться на главную</a>
+</div>
+{% endblock %}
