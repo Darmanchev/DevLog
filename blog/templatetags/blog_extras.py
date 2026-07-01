@@ -1,10 +1,10 @@
 import math
 import re
 
-import markdown
 from django import template
-from django.utils.html import escape
 from django.utils.safestring import mark_safe
+
+from blog.markdown_utils import render_markdown_html, render_markdown_plain_text
 
 register = template.Library()
 
@@ -12,10 +12,11 @@ READING_WORDS_PER_MINUTE = 200
 
 @register.filter(name='markdown')
 def markdown_format(text):
-    if not text:
-        return ""
-    md = markdown.Markdown(extensions=['fenced_code', 'tables', 'nl2br'])
-    return mark_safe(md.convert(escape(text)))
+    return mark_safe(render_markdown_html(text))
+
+@register.filter(name='markdown_plain')
+def markdown_plain_text(text):
+    return render_markdown_plain_text(text)
 
 @register.filter(name='read_time')
 def read_time(text):

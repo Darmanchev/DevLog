@@ -91,7 +91,7 @@
                 </a>
                 
                 <p class="portal-featured-excerpt">
-                    {{ post.body|truncatewords:45 }}
+                    {{ post.body|markdown_plain|truncatewords:45 }}
                 </p>
                 
                 <div class="portal-meta" style="border-top: none; padding-top: 0;">
@@ -128,7 +128,7 @@
                 </a>
                 
                 <p class="portal-card-excerpt">
-                    {{ post.body|truncatewords:20 }}
+                    {{ post.body|markdown_plain|truncatewords:20 }}
                 </p>
                 
                 <div class="portal-meta">
