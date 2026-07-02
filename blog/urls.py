@@ -1,10 +1,15 @@
 from django.urls import path
+from django.shortcuts import render
 from . import views
+
+def test_404_view(request):
+    return render(request, '404.html', status=404)
 
 app_name = 'blog'
 
 urlpatterns = [
     path('', views.PostListView.as_view(), name='post_list'),
+    path('test-404/', test_404_view, name='test_404'),
     path('signup/', views.SignUpView.as_view(), name='signup'),
     path('new/', views.PostCreateView.as_view(), name='post_create'),
     path('my-posts/', views.MyPostListView.as_view(), name='my_posts'),
