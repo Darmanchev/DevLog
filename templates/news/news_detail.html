@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title }} - Новости Болгарии{% endblock %}
+{% block meta_description %}{{ article.summary|striptags|truncatewords:28 }}{% endblock %}
+
+{% block content %}
+<nav aria-label="Панель навигации" class="portal-action-bar" style="margin-bottom: 24px;">
+    <a href="{% url 'news:news_list' %}" class="portal-link">
+        <span aria-hidden="true">←</span>
+        <span>К ленте новостей</span>
+    </a>
+</nav>
+
+<div style="width: 100%;">
+    <article class="portal-article-card" style="background: var(--portal-surface); border: 1px solid var(--portal-line); border-radius: 24px; overflow: hidden; box-shadow: var(--portal-shadow);">
+        <header class="portal-article-cover" style="position: relative; padding: 48px; background: var(--portal-bg); min-height: 250px; display: flex; align-items: flex-end;">
+            {% if article.image_url %}
+                <img src="{{ article.image_url }}" alt="Обложка" class="portal-post-cover" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.25; object-fit: cover; margin: 0;">
+            {% endif %}
+            <div class="portal-article-cover-content" style="position: relative; z-index: 1;">
+                <p class="portal-page-kicker" style="color: var(--portal-primary); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+                    📰 {{ article.source.name }}
+                    {% if article.source_category %}&bull; {{ article.source_category }}{% endif %}
+                </p>
+                <h1 class="portal-article-title" style="margin: 0; font-size: clamp(28px, 4vw, 42px); font-weight: 900; line-height: 1.1; color: var(--portal-ink);">
+                    {{ article.title }}
+                </h1>
+            </div>
+        </header>
+
+        <div class="portal-article-body" style="padding: 48px;">
+            <div class="portal-meta portal-article-meta" style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid var(--portal-line); color: var(--portal-muted); font-size: 14px; font-weight: 600;">
+                {% if article.published_at %}
+                    Опубликовано: <time datetime="{{ article.published_at|date:'c' }}">{{ article.published_at|date:"j E Y г., H:i" }}</time>
+                {% else %}
+                    Добавлено: <time datetime="{{ article.imported_at|date:'c' }}">{{ article.imported_at|date:"j E Y г., H:i" }}</time>
+                {% endif %}
+            </div>
+
+            <div class="portal-prose markdown-content" style="font-size: 19px; line-height: 1.8; color: var(--portal-ink); max-width: 840px; margin: 0 auto;">
+                {% if article.full_text %}
+                    {{ article.full_text|safe }}
+                {% else %}
+                    {{ article.summary|safe }}
+                {% endif %}
+            </div>
+            
+            <div style="margin-top: 48px; border-top: 1px solid var(--portal-line); padding-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--portal-muted); font-weight: 600;">Источник: {{ article.source.name }}</span>
+                <a href="{{ article.url }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; color: var(--portal-muted); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--portal-primary)'" onmouseout="this.style.color='var(--portal-muted)'">
+                    Перейти на источник
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </article>
+</div>
+{% endblock %}

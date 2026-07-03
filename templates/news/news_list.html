@@ -7,32 +7,84 @@
     <header class="portal-feed-header">
         <div>
             <h1 class="portal-feed-title">Новости Болгарии</h1>
-            <p class="portal-feed-subtitle">Свежие публикации из надёжных источников.</p>
+            <p class="portal-feed-subtitle">Свежие публикации из надёжных источников, обновляется автоматически.</p>
         </div>
     </header>
 
-    <div class="portal-feed-stack">
-        {% for article in articles %}
-            <article class="portal-card">
-                <span class="portal-card-category" style="font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px;">{{ article.source.name }}</span>
-                <a href="{{ article.url }}" class="portal-card-title" target="_blank" rel="noopener" style="font-size: 22px; font-weight: 800; color: var(--portal-ink); line-height: 1.25; margin-bottom: 12px; text-decoration: none;">
-                    {{ article.title }}
-                </a>
-                <p class="portal-card-excerpt" style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 24px;">{{ article.summary|truncatewords:30 }}</p>
-                
-                <div class="portal-meta" style="border-top: 2px solid #f1f5f9; padding-top: 16px; margin-top: auto; display: flex; align-items: center;">
-                    {% if article.published_at %}
-                        <time class="portal-date" style="font-size: 12px; color: #94a3b8; font-weight: 600;">{{ article.published_at|date:"d E Y" }}</time>
-                    {% endif %}
-                    <a href="{{ article.url }}" target="_blank" rel="noopener" class="portal-action-btn" style="margin-left: auto; color: #6366f1; text-decoration: none; font-size: 14px; font-weight: 700;">Читать источник →</a>
-                </div>
-            </article>
-        {% empty %}
-            <div class="portal-empty-card">
-                <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; color: var(--portal-ink);">Новостей пока нет</h2>
-                <p>Мы еще не загрузили свежие статьи. Загляните позже!</p>
-            </div>
+    {% if categories %}
+    <div style="margin-bottom: 32px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <a href="{% url 'news:news_list' %}" class="portal-action-btn {% if not selected_category %}is-active{% endif %}" style="padding: 8px 16px; border-radius: 100px; text-decoration: none; font-size: 14px; {% if not selected_category %}background: var(--portal-primary); color: white; border-color: var(--portal-primary);{% else %}background: var(--portal-surface); border: 1px solid var(--portal-line); color: var(--portal-ink);{% endif %}">
+            Все новости
+        </a>
+        {% for cat in categories %}
+            <a href="?category={{ cat.source_category|urlencode }}" class="portal-action-btn {% if selected_category == cat.source_category %}is-active{% endif %}" style="padding: 8px 16px; border-radius: 100px; text-decoration: none; font-size: 14px; {% if selected_category == cat.source_category %}background: var(--portal-primary); color: white; border-color: var(--portal-primary);{% else %}background: var(--portal-surface); border: 1px solid var(--portal-line); color: var(--portal-ink);{% endif %}">
+                {{ cat.source_category }} <span style="opacity: 0.6; font-size: 12px; margin-left: 4px;">{{ cat.article_count }}</span>
+            </a>
         {% endfor %}
     </div>
+    {% endif %}
+
+    {% if articles %}
+    <div class="portal-feed-grid">
+        {% for article in articles %}
+            <article class="portal-card" style="padding: 20px;">
+                {% if article.image_url %}
+                    <img src="{{ article.image_url }}" alt="Обложка новости" class="portal-card-cover-img" loading="lazy" style="height: 160px; margin-bottom: 16px;">
+                {% else %}
+                    <!-- Заглушка, если нет картинки, чтобы сетка была ровной -->
+                    <div class="portal-card-cover-img" style="height: 160px; margin-bottom: 16px; background: var(--portal-surface-soft); display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--portal-muted); opacity: 0.3;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                        </svg>
+                    </div>
+                {% endif %}
+                
+                <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 800; background: #eef2ff; color: #4f46e5; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        📰 {{ article.source.name }}
+                    </span>
+                </div>
+
+                <a href="{% url 'news:news_detail' article.pk %}" class="portal-card-title" style="font-size: 18px; font-weight: 800; color: var(--portal-ink); line-height: 1.35; margin-bottom: 12px; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ article.title }}
+                </a>
+                
+                <p class="portal-card-excerpt" style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 24px; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ article.summary|striptags|truncatewords:20 }}
+                </p>
+                
+                <div class="portal-meta" style="border-top: 2px solid #f1f5f9; padding-top: 16px; margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+                    {% if article.published_at %}
+                        <time class="portal-date" style="font-size: 12px; color: #94a3b8; font-weight: 700;">{{ article.published_at|date:"d M Y, H:i" }}</time>
+                    {% endif %}
+                    <a href="{% url 'news:news_detail' article.pk %}" class="portal-action-btn" style="color: #6366f1; text-decoration: none; font-size: 13px; font-weight: 800; background: #f8fafc; padding: 6px 12px; border-radius: 10px; transition: background 0.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+                        Подробнее
+                    </a>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="portal-empty-card">
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; color: var(--portal-ink);">Новостей пока нет</h2>
+            <p>Мы еще не загрузили свежие статьи. Убедитесь, что работает фоновый импортер Celery.</p>
+        </div>
+    {% endif %}
+
+    {% if is_paginated %}
+        <nav class="portal-pagination" aria-label="Пагинация новостей" style="margin-top: 40px; display: flex; justify-content: center; gap: 12px;">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">← Назад</a>
+            {% endif %}
+            
+            <div style="display: flex; align-items: center; font-weight: 700; color: var(--portal-ink);">
+                Страница {{ page_obj.number }} из {{ paginator.num_pages }}
+            </div>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">Вперед →</a>
+            {% endif %}
+        </nav>
+    {% endif %}
 </section>
 {% endblock %}
