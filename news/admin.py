@@ -16,5 +16,3 @@ class ImportedArticleAdmin(admin.ModelAdmin):
     list_filter = ['status', 'source']
     search_fields = ['title', 'summary', 'url']
     readonly_fields = ['imported_at']
-
-
