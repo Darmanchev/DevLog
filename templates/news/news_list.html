@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Новости Болгарии - BlogPortal{% endblock %}
+
+{% block content %}
+<section>
+    <header class="portal-feed-header">
+        <div>
+            <h1 class="portal-feed-title">Новости Болгарии</h1>
+            <p class="portal-feed-subtitle">Свежие публикации из надёжных источников.</p>
+        </div>
+    </header>
+
+    <div class="portal-feed-stack">
+        {% for article in articles %}
+            <article class="portal-card">
+                <span class="portal-card-category" style="font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px;">{{ article.source.name }}</span>
+                <a href="{{ article.url }}" class="portal-card-title" target="_blank" rel="noopener" style="font-size: 22px; font-weight: 800; color: var(--portal-ink); line-height: 1.25; margin-bottom: 12px; text-decoration: none;">
+                    {{ article.title }}
+                </a>
+                <p class="portal-card-excerpt" style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 24px;">{{ article.summary|truncatewords:30 }}</p>
+                
+                <div class="portal-meta" style="border-top: 2px solid #f1f5f9; padding-top: 16px; margin-top: auto; display: flex; align-items: center;">
+                    {% if article.published_at %}
+                        <time class="portal-date" style="font-size: 12px; color: #94a3b8; font-weight: 600;">{{ article.published_at|date:"d E Y" }}</time>
+                    {% endif %}
+                    <a href="{{ article.url }}" target="_blank" rel="noopener" class="portal-action-btn" style="margin-left: auto; color: #6366f1; text-decoration: none; font-size: 14px; font-weight: 700;">Читать источник →</a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="portal-empty-card">
+                <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; color: var(--portal-ink);">Новостей пока нет</h2>
+                <p>Мы еще не загрузили свежие статьи. Загляните позже!</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
