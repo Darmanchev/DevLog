@@ -13,6 +13,8 @@ class NewsSource(models.Model):
     country = models.CharField(max_length=2, default='BG')
     language = models.CharField(max_length=5, default='bg')
     is_active = models.BooleanField(default=True)
+    last_imported_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -33,6 +35,8 @@ class ImportedArticle(models.Model):
     )
     title = models.CharField(max_length=255)
     summary = models.TextField(blank=True)
+    full_text = models.TextField(blank=True)
+    source_category = models.CharField(max_length=50, blank=True)
     url = models.URLField(unique=True)
     image_url = models.URLField(blank=True)
     published_at = models.DateTimeField(null=True, blank=True)

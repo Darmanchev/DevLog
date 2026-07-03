@@ -6,5 +6,6 @@ app_name = 'news'
 
 urlpatterns = [
     path('', views.NewsListView.as_view(), name='news_list'),
+    path('<int:pk>/', views.NewsDetailView.as_view(), name='news_detail'),
 
 ]

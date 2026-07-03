@@ -2308,3 +2308,33 @@ input[type="email"]:focus {
     border-radius: 12px;
     margin: 1em 0;
 }
+
+.markdown-content a {
+    color: var(--portal-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+.markdown-content a:hover {
+    color: var(--portal-secondary);
+}
+.markdown-content figure {
+    margin: 2.5em 0;
+}
+.markdown-content figcaption {
+    font-size: 14px;
+    color: var(--portal-muted);
+    text-align: center;
+    margin-top: 12px;
+    font-style: italic;
+}
+.markdown-content iframe {
+    max-width: 100%;
+    border-radius: 12px;
+    margin: 2em 0;
+    box-shadow: var(--portal-shadow);
+}
+.markdown-content strong, .markdown-content b {
+    font-weight: 800;
+    color: var(--portal-ink);
+}
