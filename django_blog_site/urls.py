@@ -22,8 +22,8 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('news/', include('news.urls')),
     path('', include('blog.urls')),
-
 ]
 
 if settings.DEBUG:
