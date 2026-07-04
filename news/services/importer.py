@@ -1,19 +1,106 @@
 import requests
 from readability import Document
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
+from calendar import timegm
 from datetime import datetime
-from time import mktime
+from datetime import UTC
+import re
 
 import feedparser
-from django.db import transaction
-from django.utils import timezone
 
 from news.models import ImportedArticle, NewsSource
+
+
+DIR_BG_DONATION_PHRASES = (
+    "Днес, повече от всякога, независимата журналистика има нужда от вас",
+    "В мисията си да предоставяме обективни, достоверни и навременни новини",
+    "разчитаме на вашата подкрепа",
+    "Вашето дарение",
+    "Скъпи читатели",
+)
+
+
+def normalize_text(text):
+    return re.sub(r'\s+', ' ', text).strip()
+
+
+def is_dir_bg_donation_text(text):
+    normalized = normalize_text(text)
+    return any(phrase in normalized for phrase in DIR_BG_DONATION_PHRASES)
+
+
+def starts_with_dir_bg_donation(text):
+    normalized = normalize_text(text)
+    return normalized.startswith(DIR_BG_DONATION_PHRASES[0])
+
+
+def find_removable_spam_container(node):
+    selected = node
+    for candidate in node.parents:
+        if candidate.name in {'body', 'html', '[document]'}:
+            break
+
+        text = normalize_text(candidate.get_text(' ', strip=True))
+        if len(text) > 1200 or not is_dir_bg_donation_text(text):
+            break
+
+        if starts_with_dir_bg_donation(text):
+            selected = candidate
+        else:
+            break
+
+    return selected
+
+
+def is_visual_only_node(node):
+    if isinstance(node, NavigableString):
+        return not node.strip()
+    if not isinstance(node, Tag):
+        return False
+    if normalize_text(node.get_text(' ', strip=True)):
+        return False
+    return node.name in {'div', 'span', 'p', 'figure', 'svg', 'img', 'picture'}
+
+
+def remove_adjacent_visual_nodes(node):
+    for direction in ('previous_sibling', 'next_sibling'):
+        sibling = getattr(node, direction)
+        removed_count = 0
+        while sibling and removed_count < 3:
+            next_sibling = getattr(sibling, direction)
+            if isinstance(sibling, NavigableString) and not sibling.strip():
+                sibling.extract()
+            elif is_visual_only_node(sibling):
+                sibling.decompose()
+                removed_count += 1
+            else:
+                break
+            sibling = next_sibling
+
+
+def normalize_actualno_showcase_blocks(soup):
+    for block in soup.find_all(id='end-of-main-content'):
+        text = normalize_text(block.get_text(' ', strip=True))
+        link = block.find('a', string=lambda value: value and 'Google News Showcase' in value)
+        if not link or 'Последвайте ни в' not in text:
+            continue
+
+        link.extract()
+        link.string = normalize_text(link.get_text(' ', strip=True))
+        paragraph = soup.new_tag('p')
+        paragraph.append('Последвайте ни в ')
+        paragraph.append(link)
+        paragraph.append(', за да получавате още актуални новини.')
+
+        block.clear()
+        block.append(paragraph)
+
 
 def clean_html_spam(raw_html):
     if not raw_html:
         return ""
     soup = BeautifulSoup(raw_html, 'html.parser')
+    normalize_actualno_showcase_blocks(soup)
     
     spam_texts = [
         "Днес, повече от всякога",
@@ -29,12 +116,15 @@ def clean_html_spam(raw_html):
             if spam in text_node:
                 parent = text_node.parent
                 if parent and parent.name in ['p', 'span', 'strong', 'em', 'b', 'i', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
-                    if len(parent.get_text(strip=True)) < 300:
+                    if is_dir_bg_donation_text(parent.get_text(' ', strip=True)):
+                        nodes_to_remove.append(find_removable_spam_container(parent))
+                    elif len(parent.get_text(strip=True)) < 300:
                         nodes_to_remove.append(parent)
                 break
     
     for node in nodes_to_remove:
         try:
+            remove_adjacent_visual_nodes(node)
             node.decompose()
         except Exception:
             pass
@@ -80,7 +170,7 @@ def import_source(source):
             except Exception as e:
                 print(f"Failed to fetch full text for {article_url}: {e}")
                 
-            article = ImportedArticle.objects.create(
+            ImportedArticle.objects.create(
                 url=article_url,
                 source=source,
                 title=entry.get('title', '')[:255],
@@ -93,7 +183,6 @@ def import_source(source):
             )
             created = True
         else:
-            article = ImportedArticle.objects.get(url=article_url)
             created = False
 
         if created:
@@ -113,10 +202,8 @@ def get_entry_published_at(entry):
     if not published:
         return None
 
-    naive_datetime = datetime.fromtimestamp(mktime(published))
-    return timezone.make_aware(naive_datetime)
+    return datetime.fromtimestamp(timegm(published), tz=UTC)
 
-import re
 
 def get_entry_image_url(entry):
     media_content = entry.get('media_content')

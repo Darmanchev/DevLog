@@ -74,7 +74,7 @@
     {% if is_paginated %}
         <nav class="portal-pagination" aria-label="Пагинация новостей" style="margin-top: 40px; display: flex; justify-content: center; gap: 12px;">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">← Назад</a>
+                <a href="?{{ pagination_query }}page={{ page_obj.previous_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">← Назад</a>
             {% endif %}
             
             <div style="display: flex; align-items: center; font-weight: 700; color: var(--portal-ink);">
@@ -82,7 +82,7 @@
             </div>
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">Вперед →</a>
+                <a href="?{{ pagination_query }}page={{ page_obj.next_page_number }}" class="portal-button portal-button-soft" style="padding: 10px 16px; border-radius: 12px;">Вперед →</a>
             {% endif %}
         </nav>
     {% endif %}
