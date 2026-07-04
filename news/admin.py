@@ -21,7 +21,7 @@ class ImportedArticleAdmin(admin.ModelAdmin):
     list_filter = ['status', 'source', 'source_category']
     search_fields = ['title', 'summary', 'url']
     readonly_fields = ['imported_at']
-    actions = ['publish_article', 'ignore_articles']
+    actions = ['publish_articles', 'ignore_articles']
 
     @admin.action(description='Publish selected articles')
     def publish_articles(self, request, queryset):

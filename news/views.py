@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from .models import ImportedArticle
 from django.db.models import Count
+from .services.importer import clean_html_spam
 
 
 class NewsListView(ListView):
@@ -26,6 +27,10 @@ class NewsListView(ListView):
         context = super().get_context_data(**kwargs)
 
         context['selected_category'] = self.request.GET.get('category', '')
+        page_params = self.request.GET.copy()
+        page_params.pop('page', None)
+        pagination_query = page_params.urlencode()
+        context['pagination_query'] = f'{pagination_query}&' if pagination_query else ''
         context['categories'] = (
             ImportedArticle.objects.filter(
                 status=ImportedArticle.Status.PUBLISHED,
@@ -47,3 +52,10 @@ class NewsDetailView(DetailView):
         return ImportedArticle.objects.select_related('source').filter(
             status=ImportedArticle.Status.PUBLISHED,
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['article_body_html'] = clean_html_spam(
+            self.object.full_text or self.object.summary
+        )
+        return context

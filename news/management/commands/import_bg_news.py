@@ -31,7 +31,7 @@ class Command(BaseCommand):
                 )
                 continue
 
-            source.last_import = timezone.now()
+            source.last_imported_at = timezone.now()
             source.last_error = ''
             source.save(update_fields=['last_imported_at', 'last_error'])
 
@@ -50,6 +50,5 @@ class Command(BaseCommand):
                 f'Done. Created: {total_created}, skipped: {total_skipped}'
             )
         )
-
 
 

@@ -38,11 +38,7 @@
             </div>
 
             <div class="portal-prose markdown-content" style="font-size: 19px; line-height: 1.8; color: var(--portal-ink); max-width: 840px; margin: 0 auto;">
-                {% if article.full_text %}
-                    {{ article.full_text|safe }}
-                {% else %}
-                    {{ article.summary|safe }}
-                {% endif %}
+                {{ article_body_html|safe }}
             </div>
             
             <div style="margin-top: 48px; border-top: 1px solid var(--portal-line); padding-top: 24px; display: flex; justify-content: space-between; align-items: center;">
