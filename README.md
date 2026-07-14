@@ -6,51 +6,51 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-Полноценная платформа для блогов и новостей, разработанная на базе **Django**. Проект объединяет в себе функционал пользовательских блогов и автоматического агрегатора новостей.
+A comprehensive blogging and news platform built on **Django**. The project combines user-driven blog functionality with an automated news aggregator.
 
-## 💡 О проекте
+## 💡 About the Project
 
-DevLog задуман как портал для разработчиков и энтузиастов. 
-В нем есть два основных модуля:
-1. **Blog (Блог):** Пользователи могут регистрироваться, создавать посты, использовать Markdown для форматирования, оставлять комментарии и ставить лайки.
-2. **News (Новости):** Автоматизированная система сбора новостей. Использует Celery для фоновых задач по парсингу внешних источников и импорту новостных статей.
+DevLog is designed as a portal for developers and tech enthusiasts. 
+It consists of two main modules:
+1. **Blog:** Users can register, create posts, use Markdown for formatting, leave comments, and like posts.
+2. **News:** An automated news aggregator system. It utilizes Celery for background tasks to parse external sources and import news articles.
 
-## 🚀 Основной стек и этапы создания
+## 🚀 Core Stack and Development Stages
 
-### Технологии
+### Technologies
 - **Backend:** Python, Django.
-- **Background Tasks:** Celery + Redis (для асинхронного импорта новостей).
-- **Frontend:** HTML-шаблоны Django с использованием современного **Tailwind CSS**.
-- **Package Management:** Использование `uv` для быстрого управления зависимостями (`pyproject.toml` / `uv.lock`).
+- **Background Tasks:** Celery + Redis (for asynchronous news importing).
+- **Frontend:** Django HTML templates styled with modern **Tailwind CSS**.
+- **Package Management:** Managed via `uv` for fast dependency resolution (`pyproject.toml` / `uv.lock`).
 
-### Этапы разработки
-- **Базовый блог:** Настройка моделей `Post`, `Comment`, `Category`, `Tag`. Реализация CRUD операций для пользователей.
-- **Интеграция Markdown:** Добавление поддержки Markdown (`markdown_utils.py`) для удобного написания статей.
-- **Новостной агрегатор:** Создание приложения `news`, настройка парсеров и периодических задач через Celery.
-- **UI/UX:** Стилизация всех страниц портала с помощью Tailwind CSS.
+### Development Stages
+- **Core Blog Engine:** Setting up models like `Post`, `Comment`, `Category`, and `Tag`. Implementing user CRUD operations.
+- **Markdown Integration:** Adding Markdown support (`markdown_utils.py`) for a rich writing experience.
+- **News Aggregator:** Creating the `news` app, configuring parsers, and scheduling periodic tasks using Celery.
+- **UI/UX:** Styling all portal pages meticulously using Tailwind CSS.
 
-## ⚙️ Развертывание и запуск
+## ⚙️ Deployment and Setup
 
-Проект готов к локальному запуску с помощью Docker.
+The project is fully Dockerized for a smooth local launch.
 
-1. Клонируйте репозиторий:
+1. Clone the repository:
    ```bash
    git clone https://github.com/Darmanchev/DevLog.git
    cd DevLog
    ```
-2. Скопируйте файл конфигурации окружения:
+2. Copy the environment configuration file:
    ```bash
    cp .env.example .env
    ```
-3. Запустите проект через Docker Compose (поднимет Django, PostgreSQL/SQLite, Redis и Celery-воркеры):
+3. Start the project via Docker Compose (spins up Django, PostgreSQL/SQLite, Redis, and Celery workers):
    ```bash
    docker-compose up -d
    ```
-4. Выполните миграции и создайте суперпользователя:
+4. Run migrations and create a superuser:
    ```bash
    docker-compose exec web python manage.py migrate
    docker-compose exec web python manage.py createsuperuser
    ```
 
 ---
-*DevLog — это больше, чем просто блог. Это функциональный портал с фоновыми задачами и современным дизайном.* 🌐
+*DevLog is more than just a blog. It is a feature-rich portal with background processing and a modern design.* 🌐
