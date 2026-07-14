@@ -1,56 +1,80 @@
-# 📝 DevLog
+# DevLog
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
-![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
-![Celery](https://img.shields.io/badge/celery-%23a9cc54.svg?style=for-the-badge&logo=celery&logoColor=f9f9f9)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+DevLog is a student project that combines a developer blog with a Bulgarian news reader. I built it to practice a complete Django application: authentication, content management, search, comments, background infrastructure and importing data that I do not control.
 
-A comprehensive blogging and news platform built on **Django**. The project combines user-driven blog functionality with an automated news aggregator.
+## Features
 
-## 💡 About the Project
+- registration, login and author profiles;
+- create, edit and delete posts;
+- Markdown rendering with HTML sanitization;
+- categories, tags, cover images and likes;
+- nested comments with edit and soft delete;
+- search by title, text, author, category and tag;
+- sorting by date, likes, comments or relevance;
+- RSS source management and article import;
+- SQLite for a quick local start or PostgreSQL in production.
 
-DevLog is designed as a portal for developers and tech enthusiasts. 
-It consists of two main modules:
-1. **Blog:** Users can register, create posts, use Markdown for formatting, leave comments, and like posts.
-2. **News:** An automated news aggregator system. It utilizes Celery for background tasks to parse external sources and import news articles.
+## Why Django
 
-## 🚀 Core Stack and Development Stages
+I chose **Django** because the ORM, authentication, forms, migrations and admin panel let me focus on the product instead of rebuilding standard backend features. Server-rendered templates were enough for this project and kept the frontend simpler than a separate SPA.
 
-### Technologies
-- **Backend:** Python, Django.
-- **Background Tasks:** Celery + Redis (for asynchronous news importing).
-- **Frontend:** Django HTML templates styled with modern **Tailwind CSS**.
-- **Package Management:** Managed via `uv` for fast dependency resolution (`pyproject.toml` / `uv.lock`).
+The most difficult part was the news importer. RSS feeds provide different fields and the linked pages contain navigation, donation banners and other unrelated HTML. The importer combines `feedparser`, `readability` and Beautiful Soup, then sanitizes the extracted content. Another challenge was avoiding duplicate counts when search, tags, comments and likes are joined in one queryset.
 
-### Development Stages
-- **Core Blog Engine:** Setting up models like `Post`, `Comment`, `Category`, and `Tag`. Implementing user CRUD operations.
-- **Markdown Integration:** Adding Markdown support (`markdown_utils.py`) for a rich writing experience.
-- **News Aggregator:** Creating the `news` app, configuring parsers, and scheduling periodic tasks using Celery.
-- **UI/UX:** Styling all portal pages meticulously using Tailwind CSS.
+## Stack
 
-## ⚙️ Deployment and Setup
+- Python 3.13, Django 6
+- Django templates, Tailwind-generated CSS
+- SQLite or PostgreSQL
+- feedparser, Beautiful Soup, readability-lxml, bleach
+- Celery and Redis infrastructure
+- uv
 
-The project is fully Dockerized for a smooth local launch.
+## Run locally
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Darmanchev/DevLog.git
-   cd DevLog
-   ```
-2. Copy the environment configuration file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Start the project via Docker Compose (spins up Django, PostgreSQL/SQLite, Redis, and Celery workers):
-   ```bash
-   docker-compose up -d
-   ```
-4. Run migrations and create a superuser:
-   ```bash
-   docker-compose exec web python manage.py migrate
-   docker-compose exec web python manage.py createsuperuser
-   ```
+```bash
+git clone https://github.com/Darmanchev/DevLog.git
+cd DevLog
+cp .env.example .env
+uv sync
+uv run python manage.py migrate
+uv run python manage.py createsuperuser
+uv run python manage.py runserver
+```
 
----
-*DevLog is more than just a blog. It is a feature-rich portal with background processing and a modern design.* 🌐
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+To add the default Bulgarian news sources and import their latest articles:
+
+```bash
+uv run python manage.py seed_news_sources
+uv run python manage.py import_bg_news
+```
+
+Run the test suite with:
+
+```bash
+uv run python manage.py test
+```
+
+Redis and a Celery worker can be started separately:
+
+```bash
+docker compose up -d
+uv run celery -A django_blog_site worker --loglevel=info
+```
+
+The current `docker-compose.yml` starts Redis only; the Django application itself still runs locally with `uv`.
+
+## Project structure
+
+```text
+blog/       posts, comments, profiles, search and tests
+news/       RSS sources, imported articles and importer
+templates/  server-rendered pages
+static/     project styles
+django_blog_site/ settings, URLs and Celery configuration
+```
+
+## Current status and next steps
+
+The blog and manual RSS import are implemented. Celery is configured, but the importer is not yet connected to a periodic task; the existing task is only a connectivity check. The next steps are scheduled imports, a complete Docker setup for web/worker/database, pagination for large news collections, better source-specific parsing and deployment monitoring.
