@@ -13,6 +13,16 @@ The production stack is defined in `docker-compose.coolify.yml`:
 No custom domain or external object storage is required. Coolify can generate a
 free `sslip.io` URL for the Nginx service.
 
+## Branch workflow
+
+- `main` is the development branch;
+- `codex` is the deployment branch connected to Coolify;
+- develop and test changes in `main`, then merge `main` into `codex`;
+- deploy only after the checks on `codex` pass.
+
+Do not commit production secrets to either branch. Coolify stores them as
+environment variables.
+
 ## 1. Security cleanup
 
 `.env` and `db.sqlite3` must not be tracked by Git. Rotate any secret that has
@@ -21,16 +31,17 @@ SQLite database. Rewriting Git history is recommended for a public repository.
 
 ## 2. Create the Coolify resource
 
-1. Push the deployment branch to the Git provider.
+1. Push the `codex` deployment branch to the Git provider.
 2. In Coolify, create a new resource from the repository.
 3. Select the Docker Compose build pack.
 4. Set the compose location to `/docker-compose.coolify.yml`.
 5. Keep the base directory as `/`.
-6. In the environment variables, generate a new `SECRET_KEY`.
-7. Let Coolify generate `SERVICE_PASSWORD_64_POSTGRES`.
-8. Generate an HTTPS domain for the `nginx` service. Without a wildcard domain,
+6. Select `codex` as the branch to deploy.
+7. In the environment variables, generate a new `SECRET_KEY`.
+8. Let Coolify generate `SERVICE_PASSWORD_64_POSTGRES`.
+9. Generate an HTTPS domain for the `nginx` service. Without a wildcard domain,
    Coolify generates an `sslip.io` address.
-9. Deploy the stack.
+10. Deploy the stack.
 
 The generated `SERVICE_URL_NGINX` and `SERVICE_FQDN_NGINX` values are passed to
 Django automatically, so `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` do not need
