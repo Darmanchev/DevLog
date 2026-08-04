@@ -5,7 +5,8 @@ The production stack is defined in `docker-compose.coolify.yml`:
 - PostgreSQL with a persistent volume;
 - Django served by Gunicorn;
 - WhiteNoise for versioned static assets;
-- Nginx for reverse proxying and user-uploaded files;
+- a dedicated Nginx image with the proxy configuration built in for reverse
+  proxying and serving user-uploaded files;
 - a persistent media volume;
 - database migrations on web container startup;
 - health checks for every service.
