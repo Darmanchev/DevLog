@@ -65,6 +65,14 @@ uv run celery -A django_blog_site worker --loglevel=info
 
 The current `docker-compose.yml` starts Redis only; the Django application itself still runs locally with `uv`.
 
+## Deploy with Coolify
+
+Production deployment uses `docker-compose.coolify.yml` with PostgreSQL,
+Gunicorn, Nginx, persistent media storage and health checks. A custom domain is
+optional because Coolify can generate an `sslip.io` URL.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete setup and backup checklist.
+
 ## Project structure
 
 ```text
@@ -77,4 +85,8 @@ django_blog_site/ settings, URLs and Celery configuration
 
 ## Current status and next steps
 
-The blog and manual RSS import are implemented. Celery is configured, but the importer is not yet connected to a periodic task; the existing task is only a connectivity check. The next steps are scheduled imports, a complete Docker setup for web/worker/database, pagination for large news collections, better source-specific parsing and deployment monitoring.
+The blog, manual RSS import and Coolify production stack are implemented. Celery
+is configured, but the importer is not yet connected to a periodic task; the
+existing task is only a connectivity check. The next steps are scheduled imports,
+pagination for large news collections, better source-specific parsing and
+deployment monitoring.
