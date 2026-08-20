@@ -17,9 +17,9 @@ free `sslip.io` URL for the Nginx service.
 ## Branch workflow
 
 - `main` is the development branch;
-- `codex` is the deployment branch connected to Coolify;
-- develop and test changes in `main`, then merge `main` into `codex`;
-- deploy only after the checks on `codex` pass.
+- `deployment` is the deployment branch connected to Coolify;
+- develop and test changes in `main`, then merge `main` into `deployment`;
+- deploy only after the checks on `deployment` pass.
 
 Do not commit production secrets to either branch. Coolify stores them as
 environment variables.
@@ -32,12 +32,12 @@ SQLite database. Rewriting Git history is recommended for a public repository.
 
 ## 2. Create the Coolify resource
 
-1. Push the `codex` deployment branch to the Git provider.
+1. Push the `deployment` branch to the Git provider.
 2. In Coolify, create a new resource from the repository.
 3. Select the Docker Compose build pack.
 4. Set the compose location to `/docker-compose.coolify.yml`.
 5. Keep the base directory as `/`.
-6. Select `codex` as the branch to deploy.
+6. Select `deployment` as the branch to deploy.
 7. In the environment variables, generate a new `SECRET_KEY`.
 8. Create a PostgreSQL resource in the same Coolify project. Copy its private
    connection URL into the application resource as `DATABASE_URL`.
