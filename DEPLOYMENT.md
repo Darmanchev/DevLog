@@ -2,7 +2,7 @@
 
 The production stack is defined in `docker-compose.coolify.yml`:
 
-- PostgreSQL with a persistent volume;
+- a separate Coolify PostgreSQL resource, connected through `DATABASE_URL`;
 - Django served by Gunicorn;
 - WhiteNoise for versioned static assets;
 - a dedicated Nginx image with the proxy configuration built in for reverse
@@ -39,7 +39,8 @@ SQLite database. Rewriting Git history is recommended for a public repository.
 5. Keep the base directory as `/`.
 6. Select `codex` as the branch to deploy.
 7. In the environment variables, generate a new `SECRET_KEY`.
-8. Let Coolify generate `SERVICE_PASSWORD_64_POSTGRES`.
+8. Create a PostgreSQL resource in the same Coolify project. Copy its private
+   connection URL into the application resource as `DATABASE_URL`.
 9. Generate an HTTPS domain for the `nginx` service. Without a wildcard domain,
    Coolify generates an `sslip.io` address.
 10. Deploy the stack.
@@ -52,6 +53,7 @@ the generated hostname to be hard-coded.
 
 ```env
 SECRET_KEY=<new-long-random-value>
+DATABASE_URL=postgresql://<user>:<password>@<private-host>:5432/<database>
 ```
 
 The compose file supplies production-safe defaults for the other settings. Do
@@ -75,11 +77,10 @@ The seed command is optional.
 
 The following named volumes must be included in backups:
 
-- `postgres_data` — PostgreSQL database;
 - `media_data` — uploaded post covers.
 
-A redeploy preserves these volumes, but loss of the server does not. Configure
-off-server backups before storing important data.
+Configure backups on the PostgreSQL resource and back up `media_data` off the
+server. A redeploy preserves data, but loss of the server does not.
 
 ## 6. Verification
 
